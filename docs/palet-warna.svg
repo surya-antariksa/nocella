@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="900" viewBox="0 0 1100 900" role="img" aria-label="Palet warna Nocella" font-family="Inter, 'Ubuntu Sans', Cantarell, sans-serif">
+  <rect width="1100" height="900" fill="#ECECF0"/>
+  <text x="40" y="52" font-size="28" font-weight="700" fill="#1D1D1F">Palet Warna Nocella</text>
+  <text x="40" y="78" font-size="13" fill="#6E6E73">Netral dulu, satu aksen, warna status seperlunya. Swatch transparan digambar setelah dikomposit di atas panel acuan.</text>
+
+  <rect x="40" y="110" width="500" height="560" rx="28" fill="#131313" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>
+  <text x="64" y="148" font-size="16" font-weight="700" fill="#F5F5F7">Tema Gelap</text>
+  <text x="64" y="168" font-size="11" fill="#6E6E73">Panel acuan #131313</text>
+
+  <rect x="64" y="192" width="40" height="28" rx="8" fill="#000000" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>
+  <text x="120" y="208" font-size="13" font-weight="600" fill="#F5F5F7">notch</text>
+  <text x="120" y="224" font-size="10.5" font-family="'Ubuntu Sans Mono', monospace" fill="#A1A1A6">#000000</text>
+  <text x="516" y="214" font-size="11" fill="#6E6E73" text-anchor="end">Notch tertutup</text>
+
+  <rect x="64" y="236" width="40" height="28" rx="8" fill="#171719" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
+  <text x="120" y="252" font-size="13" font-weight="600" fill="#F5F5F7">surface</text>
+  <text x="120" y="268" font-size="10.5" font-family="'Ubuntu Sans Mono', monospace" fill="#A1A1A6">rgba(24,24,26,0.82)</text>
+  <text x="516" y="258" font-size="11" fill="#6E6E73" text-anchor="end">Panel terbuka · 82%</text>
+
+  <rect x="64" y="280" width="40" height="28" rx="8" fill="#18181A" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
+  <text x="120" y="296" font-size="13" font-weight="600" fill="#F5F5F7">surface-solid</text>
+  <text x="120" y="312" font-size="10.5" font-family="'Ubuntu Sans Mono', monospace" fill="#A1A1A6">#18181A</text>
+  <text x="516" y="302" font-size="11" fill="#6E6E73" text-anchor="end">Fallback opak</text>
+
+  <rect x="64" y="324" width="40" height="28" rx="8" fill="#242425" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
+  <text x="120" y="340" font-size="13" font-weight="600" fill="#F5F5F7">card</text>
+  <text x="120" y="356" font-size="10.5" font-family="'Ubuntu Sans Mono', monospace" fill="#A1A1A6">rgba(255,255,255,0.05)</text>
+  <text x="516" y="346" font-size="11" fill="#6E6E73" text-anchor="end">Kartu · 5% putih</text>
+
+  <rect x="64" y="368" width="40" height="28" rx="8" fill="#2A2A2C" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
+  <text x="120" y="384" font-size="13" font-weight="600" fill="#F5F5F7">card-hover</text>
+  <text x="120" y="400" font-size="10.5" font-family="'Ubuntu Sans Mono', monospace" fill="#A1A1A6">rgba(255,255,255,0.08)</text>
+  <text x="516" y="390" font-size="11" fill="#6E6E73" text-anchor="end">Hover · 8% putih</text>
+
+  <rect x="64" y="412" width="40" height="28" rx="8" fill="#2F2F31" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
+  <text x="120" y="428" font-size="13" font-weight="600" fill="#F5F5F7">hairline</text>
+  <text x="120" y="444" font-size="10.5" font-family="'Ubuntu Sans Mono', monospace" fill="#A1A1A6">rgba(255,255,255,0.10)</text>
+  <text x="516" y="434" font-size="11" fill="#6E6E73" text-anchor="end">Garis 1 px · 10%</text>
+
+  <rect x="64" y="456" width="40" height="28" rx="8" fill="#F5F5F7" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
+  <text x="120" y="472" font-size="13" font-weight="600" fill="#F5F5F7">text</text>
+  <text x="120" y="488" font-size="10.5" font-family="'Ubuntu Sans Mono', monospace" fill="#A1A1A6">#F5F5F7</text>
+  <text x="516" y="478" font-size="11" fill="#6E6E73" text-anchor="end">Teks utama</text>
+
+  <rect x="64" y="500" width="40" height="28" rx="8" fill="#A1A1A6" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
+  <text x="120" y="516" font-size="13" font-weight="600" fill="#F5F5F7">text-secondary</text>
+  <text x="120" y="532" font-size="10.5" font-family="'Ubuntu Sans Mono', monospace" fill="#A1A1A6">#A1A1A6</text>
+  <text x="516" y="522" font-size="11" fill="#6E6E73" text-anchor="end">Teks sekunder</text>
+
+  <rect x="64" y="544" width="40" height="28" rx="8" fill="#6E6E73" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
+  <text x="120" y="560" font-size="13" font-weight="600" fill="#F5F5F7">text-tertiary</text>
+  <text x="120" y="576" font-size="10.5" font-family="'Ubuntu Sans Mono', monospace" fill="#A1A1A6">#6E6E73</text>
+  <text x="516" y="566" font-size="11" fill="#6E6E73" text-anchor="end">Caption</text>
+
+  <text x="64" y="620" font-size="11" fill="#6E6E73">Surface 82% opasitas. Gradient putih 6% + hairline 10%</text>
+  <text x="64" y="636" font-size="11" fill="#6E6E73">membentuk faux vibrancy, bukan blur asli.</text>
+
+  <rect x="560" y="110" width="500" height="560" rx="28" fill="#FAFAFC" stroke="rgba(0,0,0,0.10)" stroke-width="1"/>
+  <text x="584" y="148" font-size="16" font-weight="700" fill="#1D1D1F">Tema Terang</text>
+  <text x="584" y="168" font-size="11" fill="#8E8E93">Panel acuan #FAFAFC · notch tetap hitam</text>
+
+  <rect x="584" y="192" width="40" height="28" rx="8" fill="#FAFAFC" stroke="rgba(0,0,0,0.16)" stroke-width="1"/>
+  <text x="640" y="208" font-size="13" font-weight="600" fill="#1D1D1F">surface</text>
+  <text x="640" y="224" font-size="10.5" font-family="'Ubuntu Sans Mono', monospace" fill="#6E6E73">rgba(250,250,252,0.84)</text>
+  <text x="1036" y="214" font-size="11" fill="#8E8E93" text-anchor="end">Panel terbuka · 84%</text>
+
+  <rect x="584" y="236" width="40" height="28" rx="8" fill="#FAFAFC" stroke="rgba(0,0,0,0.16)" stroke-width="1"/>
+  <text x="640" y="252" font-size="13" font-weight="600" fill="#1D1D1F">surface-solid</text>
+  <text x="640" y="268" font-size="10.5" font-family="'Ubuntu Sans Mono', monospace" fill="#6E6E73">#FAFAFC</text>
+  <text x="1036" y="258" font-size="11" fill="#8E8E93" text-anchor="end">Fallback opak</text>
+
+  <rect x="584" y="280" width="40" height="28" rx="8" fill="#F0F0F2" stroke="rgba(0,0,0,0.14)" stroke-width="1"/>
+  <text x="640" y="296" font-size="13" font-weight="600" fill="#1D1D1F">card</text>
+  <text x="640" y="312" font-size="10.5" font-family="'Ubuntu Sans Mono', monospace" fill="#6E6E73">rgba(0,0,0,0.04)</text>
+  <text x="1036" y="302" font-size="11" fill="#8E8E93" text-anchor="end">Kartu · 4% hitam</text>
+
+  <rect x="584" y="324" width="40" height="28" rx="8" fill="#E8E8EA" stroke="rgba(0,0,0,0.14)" stroke-width="1"/>
+  <text x="640" y="340" font-size="13" font-weight="600" fill="#1D1D1F">card-hover</text>
+  <text x="640" y="356" font-size="10.5" font-family="'Ubuntu Sans Mono', monospace" fill="#6E6E73">rgba(0,0,0,0.07)</text>
+  <text x="1036" y="346" font-size="11" fill="#8E8E93" text-anchor="end">Hover · 7% hitam</text>
+
+  <rect x="584" y="368" width="40" height="28" rx="8" fill="#E6E6E8" stroke="rgba(0,0,0,0.14)" stroke-width="1"/>
+  <text x="640" y="384" font-size="13" font-weight="600" fill="#1D1D1F">hairline</text>
+  <text x="640" y="400" font-size="10.5" font-family="'Ubuntu Sans Mono', monospace" fill="#6E6E73">rgba(0,0,0,0.08)</text>
+  <text x="1036" y="390" font-size="11" fill="#8E8E93" text-anchor="end">Garis 1 px · 8%</text>
+
+  <rect x="584" y="412" width="40" height="28" rx="8" fill="#1D1D1F" stroke="rgba(0,0,0,0.14)" stroke-width="1"/>
+  <text x="640" y="428" font-size="13" font-weight="600" fill="#1D1D1F">text</text>
+  <text x="640" y="444" font-size="10.5" font-family="'Ubuntu Sans Mono', monospace" fill="#6E6E73">#1D1D1F</text>
+  <text x="1036" y="434" font-size="11" fill="#8E8E93" text-anchor="end">Teks utama</text>
+
+  <rect x="584" y="456" width="40" height="28" rx="8" fill="#6E6E73" stroke="rgba(0,0,0,0.14)" stroke-width="1"/>
+  <text x="640" y="472" font-size="13" font-weight="600" fill="#1D1D1F">text-secondary</text>
+  <text x="640" y="488" font-size="10.5" font-family="'Ubuntu Sans Mono', monospace" fill="#6E6E73">#6E6E73</text>
+  <text x="1036" y="478" font-size="11" fill="#8E8E93" text-anchor="end">Teks sekunder</text>
+
+  <rect x="584" y="500" width="40" height="28" rx="8" fill="#8E8E93" stroke="rgba(0,0,0,0.14)" stroke-width="1"/>
+  <text x="640" y="516" font-size="13" font-weight="600" fill="#1D1D1F">text-tertiary</text>
+  <text x="640" y="532" font-size="10.5" font-family="'Ubuntu Sans Mono', monospace" fill="#6E6E73">#8E8E93</text>
+  <text x="1036" y="522" font-size="11" fill="#8E8E93" text-anchor="end">Caption</text>
+
+  <rect x="584" y="544" width="40" height="28" rx="8" fill="#000000" stroke="rgba(0,0,0,0.18)" stroke-width="1"/>
+  <text x="640" y="560" font-size="13" font-weight="600" fill="#1D1D1F">notch</text>
+  <text x="640" y="576" font-size="10.5" font-family="'Ubuntu Sans Mono', monospace" fill="#6E6E73">#000000</text>
+  <text x="1036" y="566" font-size="11" fill="#8E8E93" text-anchor="end">Tetap hitam</text>
+
+  <text x="584" y="620" font-size="11" fill="#8E8E93">Notch tetap #000000 karena ia bezel hardware, bukan bagian tema.</text>
+  <text x="584" y="636" font-size="11" fill="#8E8E93">Panel terbuka mengikuti tema terang.</text>
+
+  <rect x="40" y="690" width="1020" height="140" rx="24" fill="#FFFFFF" stroke="rgba(0,0,0,0.08)" stroke-width="1"/>
+  <text x="64" y="724" font-size="16" font-weight="700" fill="#1D1D1F">Aksen dan Status</text>
+  <text x="64" y="742" font-size="11" fill="#8E8E93">Dipakai hanya saat ada hal yang memang perlu ditandai.</text>
+
+  <rect x="64" y="762" width="34" height="34" rx="9" fill="#0A84FF"/>
+  <text x="110" y="777" font-size="12.5" font-weight="700" fill="#1D1D1F">accent</text>
+  <text x="110" y="793" font-family="'Ubuntu Sans Mono', monospace" font-size="10.5" fill="#6E6E73">#0A84FF</text>
+  <text x="110" y="808" font-size="10" fill="#8E8E93">Progress, toggle, fokus</text>
+
+  <rect x="310" y="762" width="34" height="34" rx="9" fill="#30D158"/>
+  <text x="356" y="777" font-size="12.5" font-weight="700" fill="#1D1D1F">success</text>
+  <text x="356" y="793" font-family="'Ubuntu Sans Mono', monospace" font-size="10.5" fill="#6E6E73">#30D158</text>
+  <text x="356" y="808" font-size="10" fill="#8E8E93">Selesai, aktif</text>
+
+  <rect x="556" y="762" width="34" height="34" rx="9" fill="#FF9F0A"/>
+  <text x="602" y="777" font-size="12.5" font-weight="700" fill="#1D1D1F">warning</text>
+  <text x="602" y="793" font-family="'Ubuntu Sans Mono', monospace" font-size="10.5" fill="#6E6E73">#FF9F0A</text>
+  <text x="602" y="808" font-size="10" fill="#8E8E93">Suhu, baterai lemah</text>
+
+  <rect x="802" y="762" width="34" height="34" rx="9" fill="#FF453A"/>
+  <text x="848" y="777" font-size="12.5" font-weight="700" fill="#1D1D1F">danger</text>
+  <text x="848" y="793" font-family="'Ubuntu Sans Mono', monospace" font-size="10.5" fill="#6E6E73">#FF453A</text>
+  <text x="848" y="808" font-size="10" fill="#8E8E93">Error, kritis</text>
+
+  <text x="40" y="862" font-size="10.5" fill="#6E6E73">Swatch transparan = perkiraan hasil komposit di atas panel acuan; nilai asli ada di kolom Nilai.</text>
+  <text x="40" y="878" font-size="10.5" fill="#6E6E73">Status tidak pernah dibedakan hanya dari warna. Selalu ada ikon atau teks.</text>
+</svg>
