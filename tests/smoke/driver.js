@@ -6,6 +6,7 @@
 //
 // Usage: gjs -m driver.js <output-dir> <scale>
 
+import GdkPixbuf from 'gi://GdkPixbuf';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import System from 'system';
@@ -159,6 +160,327 @@ function expectGeometry(state, width, height) {
     return n !== null && n.width === w && n.height === h && n.x === x && n.y === state.monitor.y;
 }
 
+/**
+ * Reads one pixel of a screenshot.
+ *
+ * @param {any} pixbuf a `GdkPixbuf.Pixbuf`
+ * @param {number} x
+ * @param {number} y
+ * @returns {number[]} `[r, g, b]`
+ */
+function pixelAt(pixbuf, x, y) {
+    const pixels = pixbuf.get_pixels();
+    const offset = Math.round(y) * pixbuf.get_rowstride() + Math.round(x) * pixbuf.get_n_channels();
+    return [pixels[offset], pixels[offset + 1], pixels[offset + 2]];
+}
+
+/**
+ * @param {number[]} rgb
+ * @param {number[]} expected
+ * @param {number} tolerance per channel
+ */
+function near(rgb, expected, tolerance) {
+    return rgb.every((value, i) => Math.abs(value - expected[i]) <= tolerance);
+}
+
+/**
+ * Opens the panel through real clicks and times each open from the click handler to the
+ * first painted frame in which the notch has changed size. Target from
+ * docs/07-performa.md: under 100 ms.
+ *
+ * @param {number} samples
+ */
+function measureOpenTime(samples) {
+    evaluate(`(() => {
+        const nocella = Main.extensionManager.lookup('${UUID}').stateObj._nocella;
+        const actor = nocella._surface.actor;
+        const timing = globalThis.nocellaTestTiming = {start: 0, width: 0, samples: []};
+        nocella._onButtonPress = function (event) {
+            if (!this._expanded) {
+                timing.start = GLib.get_monotonic_time();
+                timing.width = actor.get_allocation_box().get_width();
+            }
+            return Object.getPrototypeOf(this)._onButtonPress.call(this, event);
+        };
+        timing.paintId = global.stage.connect('after-paint', () => {
+            if (timing.start && actor.get_allocation_box().get_width() !== timing.width) {
+                timing.samples.push((GLib.get_monotonic_time() - timing.start) / 1000);
+                timing.start = 0;
+            }
+        });
+    })()`);
+
+    /** @type {number[]} */
+    let times = [];
+    try {
+        for (let i = 0; i < samples; i++) {
+            clickNotch('PRIMARY');
+            sleep(500);
+            clickNotch('PRIMARY');
+            sleep(400);
+        }
+    } finally {
+        times = evaluate(`(() => {
+            const timing = globalThis.nocellaTestTiming;
+            global.stage.disconnect(timing.paintId);
+            delete Main.extensionManager.lookup('${UUID}').stateObj._nocella._onButtonPress;
+            delete globalThis.nocellaTestTiming;
+            return timing.samples;
+        })()`);
+    }
+    const sorted = [...times].sort((a, b) => a - b);
+    const middle = sorted.length / 2;
+    const median = sorted.length % 2 === 1 ? sorted[Math.floor(middle)]
+        : (sorted[middle - 1] + sorted[middle]) / 2;
+    const max = sorted[sorted.length - 1];
+    print(`# open time over ${times.length} clicks: median ${median?.toFixed(1)} ms, ` +
+        `max ${max?.toFixed(1)} ms`);
+    check(`every open shows its first frame within 100 ms (${samples} clicks)`,
+        times.length === samples && max < 100, times);
+}
+
+/**
+ * Compares the notch against docs/03-desain-visual.md over the reference panel color.
+ * The panel is forced to #131313 (stock Yaru) inside the test shell only, because the
+ * installed theme may make the panel transparent.
+ *
+ * @param {{x: number, y: number, width: number, height: number}} area logical pixels
+ */
+function checkReferencePanel(area) {
+    const PANEL = [0x13, 0x13, 0x13];
+    // The enable/disable cycles bring the "unsafe mode" banner back.
+    evaluate('Main.messageTray.getSources().forEach(source => source.destroy())');
+    evaluate("Main.panel.set_style('background-color: #131313;')");
+    sleep(400);
+
+    let state = info();
+    const n = state.notch;
+    const s = scale;
+    // Screenshot pixels are device pixels with their origin at the area's corner.
+    const left = n.x - area.x * s;
+    const right = left + n.width - 1;
+    const bottom = n.height - 1;
+    screenshot('reference-collapsed', area);
+    let image = GdkPixbuf.Pixbuf.new_from_file(`${outDir}/reference-collapsed-x${s}.png`);
+    check('reference screenshot is in device pixels', image.get_width() === area.width * s,
+        image.get_width());
+
+    const samples = {
+        panel: pixelAt(image, left - 20 * s, n.height / 2),
+        body: pixelAt(image, left + 8 * s, n.height / 2),
+        topLeft: pixelAt(image, left, 0),
+        topRight: pixelAt(image, right, 0),
+        bottomLeft: pixelAt(image, left, bottom),
+        bottomRight: pixelAt(image, right, bottom),
+        // One CSS pixel of hairline is `s` device rows; the row above it is plain black.
+        hairline: Array.from({length: s}, (_, i) => pixelAt(image, left + 30 * s, bottom - i)),
+        aboveHairline: pixelAt(image, left + 30 * s, bottom - s),
+    };
+    print(`# reference pixels ${JSON.stringify(samples)}`);
+    check('reference panel beside the notch is #131313', near(samples.panel, PANEL, 2), samples.panel);
+    check('collapsed notch body is #000000', near(samples.body, [0, 0, 0], 2), samples.body);
+    check('top corners are square (black up to the edge)',
+        near(samples.topLeft, [0, 0, 0], 2) && near(samples.topRight, [0, 0, 0], 2));
+    check('bottom corners are rounded (panel color in the corner)',
+        near(samples.bottomLeft, PANEL, 3) && near(samples.bottomRight, PANEL, 3));
+    // rgba(255, 255, 255, 0.06) over black is 15.
+    check(`bottom hairline is 6% white and ${s} device row(s) thick`,
+        samples.hairline.every(rgb => near(rgb, [15, 15, 15], 3)) &&
+        near(samples.aboveHairline, [0, 0, 0], 2));
+
+    setExpanded(true);
+    sleep(700);
+    state = info();
+    const expandedLeft = state.notch.x - area.x * s;
+    screenshot('reference-expanded', area);
+    image = GdkPixbuf.Pixbuf.new_from_file(`${outDir}/reference-expanded-x${s}.png`);
+    // The vertical gradient from stylesheet.css at this row, composited over #131313.
+    const y = state.panelHeight / 2;
+    const t = y / state.notch.height;
+    const alpha = 0.83 + (0.82 - 0.83) * t;
+    const expected = [41 + (24 - 41) * t, 41 + (24 - 41) * t, 43 + (26 - 43) * t]
+        .map((c, i) => c * alpha + PANEL[i] * (1 - alpha));
+    const header = pixelAt(image, expandedLeft + 30 * s, y);
+    print(`# expanded header pixel ${JSON.stringify(header)}, expected ` +
+        `${JSON.stringify(expected.map(Math.round))}`);
+    check('pinned panel material over the reference panel matches the tokens',
+        near(header, expected, 4), {header, expected});
+    setExpanded(false);
+    sleep(600);
+
+    evaluate('Main.panel.set_style(null)');
+}
+
+// Installed in the shell under test while the extension is enabled and disabled once.
+// Records every signal handler, binding, and main-loop source whose caller frame is in
+// Nocella's files. Frame 0 of the stack is calledFromNocella, 1 the wrapper, 2 the caller.
+const INSTRUMENT = `(() => {
+    const GLib = imports.gi.GLib;
+    const calledFromNocella = () =>
+        (new Error().stack ?? '').split('\\n')[2]?.includes('/${UUID}/') ?? false;
+    const record = globalThis.nocellaTestRecord =
+        {signals: [], sources: [], bindings: [], restore: [], unpatched: [], sameGLib: null};
+    // Extensions import gi://GLib; the timer patches only reach them if it is this object.
+    import('gi://GLib').then(module => { record.sameGLib = module.default === GLib; },
+        () => { record.sameGLib = false; });
+    const ownerOf = (object, name) => {
+        let owner = object;
+        while (owner && !Object.prototype.hasOwnProperty.call(owner, name))
+            owner = Object.getPrototypeOf(owner);
+        return owner;
+    };
+    const patch = (owner, name, wrap) => {
+        const original = owner[name];
+        const wrapper = wrap(original);
+        owner[name] = wrapper;
+        // Eval code is sloppy mode, so a read-only property would ignore the assignment.
+        if (owner[name] !== wrapper)
+            record.unpatched.push(name);
+        record.restore.push(() => { owner[name] = original; });
+    };
+    const signalMethods = [
+        [Main.panel, 'connect', 'gobject'], [Main.panel, 'connect_after', 'gobject'],
+        [Main.overview, 'connect', 'emitter'], [Main.overview, 'connectAfter', 'emitter'],
+    ];
+    for (const [sample, name, kind] of signalMethods) {
+        const owner = ownerOf(sample, name);
+        if (!owner)
+            continue;
+        patch(owner, name, original => function (...args) {
+            const id = original.apply(this, args);
+            if (calledFromNocella())
+                record.signals.push({object: this, id, kind, signal: args[0]});
+            return id;
+        });
+    }
+    patch(ownerOf(Main.panel, 'bind_property'), 'bind_property', original => function (...args) {
+        const binding = original.apply(this, args);
+        if (calledFromNocella())
+            record.bindings.push(binding);
+        return binding;
+    });
+    for (const name of ['timeout_add', 'timeout_add_seconds', 'idle_add']) {
+        patch(GLib, name, original => function (...args) {
+            const id = original.apply(this, args);
+            if (calledFromNocella())
+                record.sources.push({name, id});
+            return id;
+        });
+    }
+    for (const name of ['setTimeout', 'setInterval']) {
+        patch(globalThis, name, original => function (...args) {
+            const source = original.apply(this, args);
+            if (calledFromNocella())
+                record.sources.push({name, source});
+            return source;
+        });
+    }
+})()`;
+
+// Removes the instrumentation and reports what is still connected or scheduled.
+const VERIFY = `(() => {
+    const {GLib, GObject} = imports.gi;
+    const record = globalThis.nocellaTestRecord;
+    delete globalThis.nocellaTestRecord;
+    if (!record)
+        return null;
+    record.restore.reverse().forEach(restore => restore());
+    const isConnected = s => s.kind === 'gobject'
+        ? GObject.signal_handler_is_connected(s.object, s.id)
+        : s.object.signalHandlerIsConnected(s.id);
+    return {
+        unpatched: record.unpatched,
+        sameGLib: record.sameGLib,
+        signals: record.signals.map(s => s.signal),
+        leakedSignals: record.signals.filter(isConnected)
+            .map(s => \`\${s.object.constructor?.name}::\${s.signal}\`),
+        sources: record.sources.length,
+        leakedSources: record.sources.filter(s => s.source
+            ? !s.source.is_destroyed()
+            : GLib.MainContext.default().find_source_by_id(s.id) !== null).map(s => s.name),
+        bindings: record.bindings.length,
+        leakedBindings: record.bindings.filter(b => b.dup_source() !== null).length,
+    };
+})()`;
+
+/**
+ * Verifies directly that disable() leaves no signal handler, binding, or timer behind,
+ * including the wall clock's own timer, which lives in C and is checked by its ticks.
+ * Disables while the panel is pinned, the harder case.
+ */
+function checkCleanDisable() {
+    evaluate(`Main.extensionManager.disableExtension('${UUID}')`);
+    waitFor(() => extensionState() === State.INACTIVE, 5000);
+    // With seconds shown the wall clock ticks every second instead of every minute.
+    const showSeconds = evaluate(`(() => {
+        const settings = new (imports.gi.Gio.Settings)({schema_id: 'org.gnome.desktop.interface'});
+        const original = settings.get_boolean('clock-show-seconds');
+        settings.set_boolean('clock-show-seconds', true);
+        return original;
+    })()`);
+
+    let result = null;
+    let pinned = false;
+    let ticksBefore = 0;
+    let ticksAfter = -1;
+    try {
+        evaluate(INSTRUMENT);
+        evaluate(`Main.extensionManager.enableExtension('${UUID}')`);
+        waitFor(() => extensionState() === State.ACTIVE, 5000);
+        clickNotch('PRIMARY');
+        evaluate(`(() => {
+            const clock = Main.extensionManager.lookup('${UUID}').stateObj._nocella._wallClock;
+            const watch = globalThis.nocellaTestClock = {clock, ticks: 0};
+            watch.id = clock.connect('notify::clock', () => watch.ticks++);
+        })()`);
+        sleep(2500);
+        pinned = info().notch?.expanded === true;
+        ticksBefore = evaluate('globalThis.nocellaTestClock.ticks');
+        evaluate(`Main.extensionManager.disableExtension('${UUID}')`);
+        waitFor(() => extensionState() === State.INACTIVE, 5000);
+        evaluate('globalThis.nocellaTestClock.ticks = 0');
+        sleep(2500);
+        ticksAfter = evaluate('globalThis.nocellaTestClock.ticks');
+    } finally {
+        try {
+            result = evaluate(VERIFY);
+        } finally {
+            evaluate(`(() => {
+                const watch = globalThis.nocellaTestClock;
+                delete globalThis.nocellaTestClock;
+                try {
+                    watch?.clock.disconnect(watch.id);
+                } catch {}
+                new (imports.gi.Gio.Settings)({schema_id: 'org.gnome.desktop.interface'})
+                    .set_boolean('clock-show-seconds', ${showSeconds});
+            })()`);
+        }
+    }
+
+    print(`# connections made by nocella: ${JSON.stringify(result)}`);
+    check('instrumentation patched every method and reaches gi://GLib',
+        result?.unpatched.length === 0 && result.sameGLib === true,
+        {unpatched: result?.unpatched, sameGLib: result?.sameGLib});
+    check('the panel was pinned when disable() ran', pinned);
+    // Phase 1 connects 8 handlers in enable(); fewer means the instrumentation missed some.
+    check('instrumentation saw every signal connected in enable()', result?.signals.length >= 8,
+        result?.signals);
+    check('no signal handler is left connected after disable', result?.leakedSignals.length === 0,
+        result?.leakedSignals);
+    // unbind() and disposing the wall clock both end the binding; this checks the outcome.
+    check('no property binding outlives disable', result?.bindings >= 1 &&
+        result.leakedBindings === 0, result);
+    // Phase 1 schedules no JS timers, so this only guards against new ones in later phases.
+    check('no timer or idle source is left after disable', result?.leakedSources.length === 0,
+        result?.leakedSources);
+    check('the wall clock stops ticking after disable', ticksBefore >= 2 && ticksAfter === 0,
+        {before: ticksBefore, after: ticksAfter});
+
+    evaluate(`Main.extensionManager.enableExtension('${UUID}')`);
+    check('nocella is active again after the clean-disable check',
+        waitFor(() => extensionState() === State.ACTIVE, 5000));
+}
+
 function run() {
     if (!waitFor(() => evaluate('true') === true, 60000)) {
         check('shell starts with unsafe mode on', false);
@@ -271,6 +593,12 @@ function run() {
     check('no actors leak across cycles', state.uiChildren === baseline,
         {before: baseline, after: state.uiChildren});
     check('notch is back after the cycles', state.notch?.visible && expectGeometry(state, 196, 0));
+
+    measureOpenTime(10);
+    checkReferencePanel(area);
+    checkCleanDisable();
+    sleep(500);
+    check('notch is collapsed and centered at the end', expectGeometry(info(), 196, 0));
 }
 
 try {

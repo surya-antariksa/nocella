@@ -64,7 +64,7 @@ Kalau salah satu belum disetujui, jangan mulai fase 1.
 
 ## Fase 1: Kerangka
 
-**Hari 1-5. Status: berjalan.**
+**Hari 1-5. Status: selesai.** G1 lulus 2026-10-25 lewat smoke test skala 1 dan 2.
 
 Pekerjaan:
 
@@ -88,11 +88,15 @@ Gate G1:
 - [x] Buka/tutup 20 kali tanpa error (smoke test; klik asli diuji terpisah lewat pointer
       virtual).
 - [x] Disable mengembalikan jam GNOME (smoke test, 20 siklus).
-- [ ] Tidak ada timer atau signal yang tersisa setelah disable. Sebagian: 20 siklus
-      tanpa kebocoran aktor dan tanpa error log; belum diverifikasi langsung.
-- [ ] Waktu buka < 100 ms sampai konten pertama terlihat. Belum diukur.
-- [ ] Screenshot skala 1 dan 2 dibandingkan dengan `03-desain-visual.md`. Bentuk dan
-      material sudah; perbandingan dengan panel asli menunggu sesi nested/asli.
+- [x] Tidak ada timer atau signal yang tersisa setelah disable (smoke test dengan
+      instrumentasi `connect`, `bind_property`, dan timer JS, disable saat panel terbuka;
+      kontrol negatif membuktikan signal, timer, dan detak jam yang bocor tertangkap).
+- [x] Waktu buka < 100 ms sampai perubahan pertama terlihat (dari handler klik asli sampai
+      frame pertama dengan ukuran notch yang berubah, tanpa latensi input: median 9,1 ms
+      dan maks 14,0 ms di skala 1, median 20,9 ms dan maks 25,3 ms di skala 2, headless).
+- [x] Screenshot skala 1 dan 2 dibandingkan dengan `03-desain-visual.md` (piksel di atas
+      panel acuan `#131313`: badan `#000000`, sudut atas siku, sudut bawah membulat,
+      hairline 6% setebal 1 px CSS, material panel terbuka sesuai token).
 - [x] Kode fase 1 mengikuti konvensi kode: bahasa Inggris, string UI lewat `_()`.
 
 Risiko utama: `Main.panel.height` belum tersedia saat enable. Fallback ke 32.

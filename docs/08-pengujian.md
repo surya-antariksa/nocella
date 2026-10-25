@@ -67,6 +67,32 @@ yang gagal.
   mengembalikannya dalam keadaan tertutup.
 - 20 kali buka/tutup cepat lewat pemanggilan langsung, overview menyembunyikan notch, dan 20 siklus
   disable/enable tanpa kebocoran aktor.
+- Waktu buka dari 10 klik asli: dari handler klik sampai frame pertama yang dicat dengan
+  ukuran notch yang sudah berubah (signal `after-paint` stage). Harus < 100 ms. Latensi
+  input sebelum handler dan presentasi ke layar fisik tidak termasuk.
+- Perbandingan piksel dengan `03-desain-visual.md` di atas panel acuan. Warna panel
+  dipaksa `#131313` hanya di shell uji, lalu yang diperiksa: badan notch `#000000`,
+  sudut atas siku, sudut bawah membulat, hairline bawah 6% putih setebal 1 px CSS (2
+  baris device di skala 2), dan warna header panel terbuka sesuai gradient token
+  dengan toleransi 4.
+- Disable yang bersih, diverifikasi langsung. Selama satu siklus enable/disable (disable
+  saat panel terbuka, dan itu ikut dicek), `connect`, `bind_property`, `GLib.timeout_add*`,
+  `idle_add`, `setTimeout`, dan `setInterval` dibungkus sementara. Uji memastikan semua
+  pembungkus terpasang dan `gi://GLib` yang diimpor ekstensi adalah objek yang sama.
+  Setiap pemanggilan yang pemanggil langsungnya berkas Nocella dicatat, lalu setelah
+  disable dicek dengan `GObject.signal_handler_is_connected`, `find_source_by_id` atau
+  `is_destroyed()`, dan `GBinding.dup_source()`. Timer menit `GnomeDesktop.WallClock`
+  ada di C, jadi dicek lewat detaknya: dengan `clock-show-seconds` aktif jam harus
+  berdetak sebelum disable dan diam setelahnya.
+  - Kontrol negatif: menghapus `this._signals.clear()` dan `run_dispose()` membuat
+    pemeriksaan signal dan detak jam gagal, padahal 20 siklus disable/enable tetap lulus.
+    Menambah `GLib.timeout_add` dan `setTimeout` yang tidak dihapus membuat pemeriksaan
+    timer gagal.
+  - Batasan: pemeriksaan binding hanya membuktikan binding tidak hidup lagi.
+    `run_dispose()` pada sumbernya juga mengakhirinya, jadi `unbind()` yang hilang tidak
+    tertangkap. Timer lewat `GLib.Source` langsung atau `imports.mainloop`, dan signal
+    lewat `connectObject`, tidak tercatat. Fase berikutnya yang memakainya perlu
+    menambah instrumentasinya.
 - Log shell bersih dari error Nocella, termasuk `JS ERROR` yang jejak tumpukannya
   mengarah ke berkas Nocella, dan tidak ada proses yang tertinggal.
 
@@ -85,16 +111,23 @@ Isolasi dan pengaman:
 - Bus privat hanya bisa menyalakan dconf, dan `ibus-daemon` diganti stub. Tanpa
   pengaman ini, pada 2026-10-24 setiap shell uji menyalakan `ibus-daemon` sendiri yang
   tertinggal dan membengkak. Enam instance mencapai sekitar 10,5 GB dan membuat laptop
-  pengembang kehabisan RAM. Dengan pengaman, puncak satu putaran uji sekitar 190 MiB.
+  pengembang kehabisan RAM. Dengan pengaman, puncak satu putaran uji sekitar 240 MiB di skala 1
+  dan 290 MiB di skala 2.
 - Ctrl-C tetap menghentikan seluruh scope, shell diberi 5 detik untuk berhenti sebelum
   dipaksa, dan uji menolak jalan kalau batas memori cgroup tidak aktif.
 - `scripts/nested.sh` memakai sandbox yang sama untuk uji manual.
 - `NOCELLA_SMOKE_DRIVER` menjalankan driver lain (misalnya eksperimen gaya) di sandbox
   yang sama.
 
-Batasan: panel GNOME di sesi headless tampil transparan, jadi perbandingan warna
-dengan panel asli (`#131313`) tetap dilakukan di nested shell atau sesi asli. Fullscreen
-belum diuji otomatis karena butuh jendela klien.
+Panel transparan di screenshot biasa bukan efek headless. Di mesin pengembang,
+`Yaru/gnome-shell-theme.gresource` sudah diubah dari paketnya (`dpkg -V` menandainya)
+dan berisi `#panel { background-color: transparent; height: 40px !important; }`, jadi
+panel di sesi asli juga transparan. Karena itu perbandingan warna memakai panel acuan
+`#131313` yang dipaksa di shell uji. Di atas panel transparan, notch tampil sebagai tab
+hitam di atas wallpaper.
+
+Batasan: fullscreen belum diuji otomatis karena butuh jendela klien. Waktu buka diukur di
+monitor virtual headless, belum di GPU asli.
 
 ## Matriks kompatibilitas
 

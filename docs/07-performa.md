@@ -199,20 +199,19 @@ Setelah 50 siklus:
 
 ### Waktu buka
 
-Tambahkan log sementara:
+Target < 100 ms berlaku sampai perubahan pertama terlihat, bukan sampai animasi selesai.
+Mengukur sampai `onComplete` selalu memberi sekitar 300 ms, yaitu durasi animasi buka.
 
-```js
-const t0 = GLib.get_monotonic_time();
-this._actor.ease({
-    // ...
-    onComplete: () => {
-        const ms = (GLib.get_monotonic_time() - t0) / 1000;
-        console.log(`notch expand: ${ms.toFixed(1)} ms`);
-    },
-});
-```
+Smoke test (`tests/smoke/driver.js`, `measureOpenTime`) mengukurnya tanpa log di kode
+ekstensi: handler klik dibungkus sementara untuk mencatat `t0`, lalu signal `after-paint`
+stage mencatat frame pertama yang alokasi lebar notch-nya sudah berubah. Latensi input
+sebelum handler tidak ikut terhitung. Hasil fase 1 di monitor virtual headless: median
+9,1 ms (maks 14,0 ms) di skala 1, dan median 20,9 ms (maks 25,3 ms) di skala 2. Ulangi
+di sesi asli kalau GPU-nya lemah.
 
-Hapus log setelah pengukuran. Jangan biarkan log pengukuran tertinggal di rilis.
+Kalau perlu mengukur di sesi asli tanpa driver, pakai log sementara dengan cara yang sama
+(`t0` di handler, waktu di `after-paint` pertama yang ukurannya berubah). Hapus log
+setelah pengukuran. Jangan biarkan log pengukuran tertinggal di rilis.
 
 ## Anti-pola yang harus dihindari
 

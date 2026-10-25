@@ -6,7 +6,7 @@ Nocella menempel di tepi atas layar seperti notch MacBook, lalu membesar seperti
 Dynamic Island saat ada media, notifikasi, atau aktivitas lain. Setelah selesai, ia
 kembali menjadi potongan hitam kecil yang tenang.
 
-Status: **fase 1 (kerangka)**. Sudah ada notch tertutup dengan jam, panel kosong yang
+Status: **fase 1 (kerangka) selesai, G1 lulus**. Sudah ada notch tertutup dengan jam, panel kosong yang
 dibuka dan ditutup dengan klik, dan material dasarnya. Fitur seperti media dan
 notifikasi menyusul sesuai [roadmap](docs/09-roadmap.md).
 
