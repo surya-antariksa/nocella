@@ -1,6 +1,6 @@
 # ADR 0001: GNOME Shell extension sebagai stack
 
-Status: **diusulkan**, menunggu persetujuan.
+Status: **diterima** (2026-10-24).
 
 Tanggal: 2026-10-24
 

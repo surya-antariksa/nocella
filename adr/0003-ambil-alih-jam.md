@@ -1,6 +1,6 @@
 # ADR 0003: Notch mengambil alih area jam
 
-Status: **diusulkan**, menunggu persetujuan.
+Status: **diterima** (2026-10-24).
 
 Tanggal: 2026-10-24
 

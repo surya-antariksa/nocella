@@ -1,0 +1,6 @@
+{
+  "uuid": "unsafe-mode@nocella.test",
+  "name": "Nocella smoke-test helper",
+  "description": "Turns on unsafe mode so the smoke test can use Eval and Screenshot. Test sessions only.",
+  "shell-version": ["46"]
+}

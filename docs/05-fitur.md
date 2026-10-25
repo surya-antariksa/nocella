@@ -7,8 +7,11 @@ Setiap fitur punya sumber data, tampilan, aksi, cara gagal, dan perkiraan usaha.
 
 ### Sumber
 
-- Waktu: `GLib.DateTime.new_now_local()`, timer ke menit berikutnya (bukan tiap detik).
-- Format: `org.gnome.desktop.interface clock-format` (`12h` atau `24h`).
+- Waktu: `GnomeDesktop.WallClock({time_only: true})`, sumber yang sama dengan jam panel
+  GNOME. Ia sudah menangani pergantian menit, zona waktu, resume, locale, dan
+  `clock-format`. Properti `clock` di-bind ke label notch.
+- Format: `org.gnome.desktop.interface clock-format` (`12h` atau `24h`) hanya dibaca
+  untuk lebar notch (206 px untuk 12 jam).
 - Tanggal: `GLib.DateTime.format("%A, %d %B")` mengikuti locale.
 - Kalender bulan ini: dihitung sendiri dengan `GLib.DateTime`, tidak perlu pustaka.
 - Acara kalender: ditunda. v1 hanya tombol "Buka Kalender" yang menjalankan

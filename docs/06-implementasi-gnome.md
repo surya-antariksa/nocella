@@ -48,138 +48,64 @@ import {Nocella} from './src/nocella.js';
 
 export default class NocellaExtension extends Extension {
     enable() {
-        this._settings = this.getSettings();
-        this._nocella = new Nocella(this);
-        this._nocella.enable();
+        this._nocella = new Nocella();
+        try {
+            this._nocella.enable();
+        } catch (e) {
+            // Never leave a half-built notch behind, or a hidden GNOME clock.
+            this._nocella.disable();
+            this._nocella = null;
+            throw e;
+        }
     }
 
     disable() {
         this._nocella?.disable();
         this._nocella = null;
-        this._settings = null;
     }
 }
 ```
 
 Tidak ada `init()`. Sejak GNOME 45, `enable()` dan `disable()` adalah satu-satunya
-siklus hidup yang perlu.
+siklus hidup yang perlu. Kalau `enable()` gagal di tengah jalan, `disable()` langsung
+dipanggil, jadi tidak ada aktor setengah jadi atau jam GNOME yang tertinggal
+tersembunyi. `getSettings()` baru dipakai saat ada fitur yang membaca preferensi.
 
 ## Aktor utama
 
-```js
-import St from 'gi://St';
-import Clutter from 'gi://Clutter';
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+Implementasinya ada di `extension/src/ui/surface.js` (aktor, ukuran, material) dan
+`extension/src/nocella.js` (chrome, jam, relayout, visibilitas). Pokoknya:
 
-const COLLAPSED_WIDTH = 196;
-const COLLAPSED_HEIGHT = 32;
-
-export class Nocella {
-    constructor(extension) {
-        this._extension = extension;
-        this._settings = extension.getSettings();
-
-        this._actor = new St.Widget({
-            name: 'nocella',
-            style_class: 'nocella',
-            reactive: true,
-            track_hover: true,
-            can_focus: true,
-            layout_manager: new Clutter.BinLayout(),
-            width: COLLAPSED_WIDTH,
-            height: COLLAPSED_HEIGHT,
-        });
-
-        this._actor.connect('button-press-event', (actor, event) => {
-            if (event.get_button() !== 1)
-                return Clutter.EVENT_PROPAGATE;
-            this.toggle();
-            return Clutter.EVENT_STOP;
-        });
-    }
-
-    enable() {
-        Main.layoutManager.addChrome(this._actor, {
-            affectsInputRegion: true,
-            affectsStruts: false,
-            trackFullscreen: false, // visibility is owned by the state machine
-        });
-
-        this._reposition();
-        this._monitorsChangedId = Main.layoutManager.connect(
-            'monitors-changed', () => this._reposition());
-    }
-
-    _reposition() {
-        const monitor = Main.layoutManager.primaryMonitor;
-        if (!monitor)
-            return;
-
-        const width = this._actor.width || COLLAPSED_WIDTH;
-        const x = Math.round(monitor.x + (monitor.width - width) / 2);
-        const y = monitor.y;
-        this._actor.set_position(x, y);
-    }
-
-    toggle() {
-        if (this._expanded)
-            this.collapse();
-        else
-            this.expand();
-    }
-
-    expand() {
-        const width = 420;
-        const height = 240;
-        this._expanded = true;
-        this._actor.add_style_class_name('expanded');
-        this._actor.ease({
-            width,
-            height,
-            duration: 300,
-            mode: Clutter.AnimationMode.EASE_OUT_QUINT,
-            onComplete: () => this._reposition(),
-        });
-    }
-
-    collapse() {
-        this._expanded = false;
-        this._actor.remove_style_class_name('expanded');
-        this._actor.ease({
-            width: COLLAPSED_WIDTH,
-            height: COLLAPSED_HEIGHT,
-            duration: 220,
-            mode: Clutter.AnimationMode.EASE_IN_QUART,
-            onComplete: () => this._reposition(),
-        });
-    }
-
-    disable() {
-        if (this._monitorsChangedId) {
-            Main.layoutManager.disconnect(this._monitorsChangedId);
-            this._monitorsChangedId = 0;
-        }
-        if (this._actor) {
-            Main.layoutManager.removeChrome(this._actor);
-            this._actor.destroy();
-            this._actor = null;
-        }
-    }
-}
-```
-
-Catatan penting:
-
-- `width` dan `height` di animasi memicu layout tiap frame. Ini masih wajar untuk satu
-  aktor. Kalau nanti terasa berat, ganti dengan `Clutter.PropertyTransition` atau
-  animasi `scale` dengan kompensasi ukuran.
-- `_reposition()` harus dipanggil setelah animasi selesai, karena `x` bergantung pada
-  lebar. Kalau dipanggil tiap frame, posisi bergerak halus tapi biaya layout naik.
+- Aktor akar adalah `St.BoxLayout` vertikal bernama `nocella`: header setinggi notch
+  tertutup berisi jam, lalu body untuk view pinned. Header tetap di atas saat panel
+  membesar, jadi jam tidak bergeser.
+- Dipasang dengan `Main.layoutManager.addChrome(actor, {affectsInputRegion: true,
+  affectsStruts: false, trackFullscreen: false})`.
+- Ukuran di `src/tokens.js` adalah piksel logis skala 1. Ukuran yang diatur lewat JS
+  dikalikan `St.ThemeContext.get_for_stage(global.stage).scale_factor`; St hanya
+  menskalakan ukuran di CSS. Tinggi notch tertutup mengikuti `Main.panel.height` (sudah
+  piksel device), dengan fallback 32 px logis.
+- Buka dan tutup memakai `actor.ease()` pada `x`, `width`, dan `height` sekaligus.
+  Karena `x` ikut di-ease, pusat notch diam selama animasi. Memusatkan ulang di
+  `onComplete` membuat panel tumbuh ke kanan lalu melompat.
+- `ease()` milik GNOME Shell sudah menghormati `enable-animations` (durasi menjadi 0),
+  jadi tidak perlu cek manual.
+- Relayout langsung (durasi 0) saat `monitors-changed`, `notify::height` pada panel,
+  `notify::scale-factor`, dan perubahan `clock-format`.
+- Jangan memasang `clip_to_allocation` pada aktor akar; bayangan luar panel ikut
+  terpotong.
 - `addChrome` menempatkan aktor di bawah `global.top_window_group`, jadi popup shell
   tetap di atas notch. Ini yang diinginkan. Jangan pakai `addTopChrome` kecuali notch
   perlu menutupi popup.
+- `width` dan `height` di animasi memicu layout tiap frame. Untuk satu aktor ini masih
+  wajar. Kalau nanti terasa berat, pertimbangkan animasi `scale` dengan kompensasi ukuran.
 
 ## Mengambil alih area jam
+
+Implementasinya di `extension/src/clock-takeover.js`. Ia menyembunyikan tombol
+`dateMenu`, bukan kontainernya, karena panel memanggil `container.show()` setiap kali
+menyusun ulang isinya. Ia juga hanya memulihkan jam yang ia sembunyikan sendiri.
+Bentuk ringkasnya:
 
 ```js
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
@@ -212,7 +138,10 @@ mudah dikembalikan.
 
 State machine adalah satu-satunya pemilik visibilitas. `trackFullscreen` tidak dipakai,
 karena ia menyembunyikan aktor tanpa memberi tahu state machine, sehingga
-`bannerBlocked` bisa tertinggal `true` saat fullscreen.
+`bannerBlocked` bisa tertinggal `true` saat fullscreen. Di fase 1, `Nocella`
+(`src/nocella.js`) yang memegang himpunan alasan ini; state machine mengambil alih di
+fase 2. `monitors-changed` juga menyinkronkan ulang status fullscreen, karena monitor
+utama baru belum tentu memicu `in-fullscreen-changed`.
 
 ```js
 this._signals.add(global.display, global.display.connect('in-fullscreen-changed', () => {
@@ -311,26 +240,22 @@ tidak boleh ada timer atau signal yang masih memanggil kode notch.
 }
 
 .nocella.peek {
-    background-color: rgba(18, 18, 20, 0.96);
     background-gradient-direction: vertical;
-    background-gradient-start: rgba(255, 255, 255, 0.04);
-    background-gradient-end: rgba(255, 255, 255, 0);
+    /* rgba(18, 18, 20, 0.96) with 4% white composited on top */
+    background-gradient-start: rgba(28, 28, 30, 0.96);
+    background-gradient-end: rgba(18, 18, 20, 0.96);
     border-radius: 0 0 20px 20px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35),
-                inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     padding: 0 12px;
 }
 
 .nocella.expanded {
-    background-color: rgba(24, 24, 26, 0.82);
     background-gradient-direction: vertical;
-    background-gradient-start: rgba(255, 255, 255, 0.06);
-    background-gradient-end: rgba(255, 255, 255, 0);
+    /* rgba(24, 24, 26, 0.82) with 6% white composited on top */
+    background-gradient-start: rgba(41, 41, 43, 0.83);
+    background-gradient-end: rgba(24, 24, 26, 0.82);
     border-radius: 0 0 26px 26px;
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55),
-                0 2px 8px rgba(0, 0, 0, 0.35),
-                inset 0 -1px 0 rgba(255, 255, 255, 0.10);
-    padding: 0;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
 }
 
 .nocella .card {
@@ -350,7 +275,7 @@ tidak boleh ada timer atau signal yang masih memanggil kode notch.
 ```
 
 St CSS bukan CSS browser. Yang didukung: `background-color`, `background-gradient-*`,
-`border`, `border-radius` (termasuk empat nilai), `box-shadow` (termasuk `inset`),
+`border`, `border-radius` (termasuk empat nilai), `box-shadow` (satu bayangan, luar atau `inset`),
 `padding`, `margin`, `spacing`, `color`, `font-family`, `font-size`, `font-weight`,
 `font-feature-settings`, `letter-spacing`, `text-align`, dan properti `-st-` tertentu.
 Tidak ada `display: flex`, tidak ada `calc()`, tidak ada `backdrop-filter`, tidak ada
@@ -359,16 +284,24 @@ variabel CSS.
 St tidak mendukung border per sisi seperti `border-bottom`. Untuk hairline 1 px di tepi
 bawah, pakai `box-shadow: inset 0 -1px 0 <warna>`.
 
+Dua perilaku St yang terbukti di fase 1 dan mudah terlewat:
+
+- `background-gradient-start/end` menggantikan `background-color`. Stop gradient harus
+  membawa warna permukaan, bukan putih transparan yang ditumpuk di atasnya.
+- Satu aktor hanya punya satu `box-shadow`. Daftar yang mencampur bayangan luar dan
+  `inset` tidak digambar sama sekali. Hairline di panel yang punya bayangan besar butuh
+  aktor terpisah.
+
 Karena tidak ada variabel, tema terang dibuat dengan style class terpisah. Notch
 tertutup tetap hitam; hanya panel terbuka yang berubah:
 
 ```css
 .nocella.expanded.light {
-    background-color: rgba(250, 250, 252, 0.84);
+    /* The gradient replaces background-color, so override both stops. */
+    background-gradient-start: rgba(251, 251, 253, 0.85);
+    background-gradient-end: rgba(250, 250, 252, 0.84);
     color: #1D1D1F;
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18),
-                0 2px 8px rgba(0, 0, 0, 0.10),
-                inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
 }
 
 .nocella.expanded.light .card {
@@ -380,8 +313,8 @@ tertutup tetap hitam; hanya panel terbuka yang berubah:
 }
 ```
 
-Faux vibrancy: tidak ada blur asli. Lapisan yang dipakai hanya `background-color`
-translusen, gradient vertikal tipis, hairline, dan bayangan. Ini cukup untuk wallpaper
+Faux vibrancy: tidak ada blur asli. Lapisan yang dipakai hanya gradient
+vertikal translusen, hairline, dan bayangan. Ini cukup untuk wallpaper
 gelap dan jauh lebih murah daripada `Shell.BlurEffect`. Detail di
 `adr/0005-material-macos.md`.
 
@@ -483,12 +416,12 @@ Tanpa langkah ini, `getSettings()` gagal dan ekstensi tidak bisa enable.
 ### Cara cepat (sesi saat ini)
 
 ```bash
-mkdir -p ~/.local/share/gnome-shell/extensions/nocella@antariksa
-cp -r extension.js metadata.json prefs.js stylesheet.css src schemas \
-  ~/.local/share/gnome-shell/extensions/nocella@antariksa/
-glib-compile-schemas ~/.local/share/gnome-shell/extensions/nocella@antariksa/schemas/
+scripts/install.sh
+# log out and back in on Wayland, then:
 gnome-extensions enable nocella@antariksa
 ```
+
+`scripts/install.sh` memanggil `scripts/pack.sh` lalu `gnome-extensions install --force`.
 
 Di Wayland, ekstensi baru atau perubahan `metadata.json` biasanya butuh logout/login.
 Perubahan JavaScript biasa bisa dicoba dengan mematikan lalu menyalakan ekstensi:
@@ -506,12 +439,22 @@ Simpan pekerjaan sebelum mencoba kode yang berisiko.
 ### Nested shell (disarankan saat pengembangan)
 
 ```bash
-dbus-run-session -- gnome-shell --nested --wayland
+scripts/nested.sh [skala]
 ```
 
-Nested shell membuka jendela GNOME Shell di dalam sesi Wayland yang sudah ada. Ekstensi
-yang sama ikut termuat. Ini jauh lebih aman daripada memuat kode baru ke shell utama.
-Kalau nested shell tidak mau start, cek `journalctl` dan pastikan `mutter` versi sama.
+Nested shell membuka jendela GNOME Shell di dalam sesi Wayland yang sudah ada, hanya
+dengan Nocella aktif. Skrip ini memakai sandbox yang sama dengan smoke test: dconf,
+folder ekstensi, dan session bus privat, stub `ibus-daemon`, dan scope systemd ber-batas
+RAM. Pengaturan sesi asli tidak dibaca maupun ditulis. Jangan menjalankan
+`dbus-run-session -- gnome-shell --nested` langsung: tanpa pengaman itu shell nested
+menyalakan `ibus-daemon` sendiri yang bisa tertinggal dan membengkak (lihat
+`08-pengujian.md`). Tutup jendelanya untuk mengakhiri. Log ada di
+`build/smoke/shell-nested.log`.
+
+### Smoke test headless
+
+`tests/smoke/run.sh` menjalankan GNOME Shell headless yang terisolasi penuh dan memeriksa
+gate fase 1 secara otomatis. Detail dan pengaman memorinya ada di `08-pengujian.md`.
 
 ### Log
 
@@ -536,15 +479,13 @@ Ini alat utama untuk memeriksa API privat sebelum menulis kode.
 ### Packing
 
 ```bash
-gnome-extensions pack \
-  --force \
-  --podir=po \
-  --extra-source=src \
-  --schema=schemas/org.gnome.shell.extensions.nocella.gschema.xml
+scripts/pack.sh
 ```
 
-Hasilnya `nocella@antariksa.shell-extension.zip`, bisa dipasang dengan
-`gnome-extensions install --force`.
+Hasilnya `build/nocella@antariksa.shell-extension.zip`. Skrip ini memakai
+`--extra-source=src`, schema, dan `--podir=po`. Kalau `msgfmt` (paket `gettext`) tidak
+ada, ia mem-pack salinan tanpa `po/` dan memberi peringatan, karena `gnome-extensions
+pack` selalu mencoba mengompilasi `po/` bila folder itu ada.
 
 ## Jebakan yang sudah diketahui
 
@@ -557,6 +498,12 @@ Hasilnya `nocella@antariksa.shell-extension.zip`, bisa dipasang dengan
 | Signal tidak dilepas | Callback ke objek yang sudah dihancurkan | SignalGroup |
 | `actor.destroy()` lalu `disconnect` | Error "object already disposed" | Bungkus try/catch |
 | `Main.panel.height` saat enable | Kadang 0 sebelum layout | Fallback 32 |
+| Ukuran aktor lewat JS di skala 2 | Notch setengah ukuran | Kalikan `scale_factor` |
+| Memusatkan ulang di `onComplete` | Panel tumbuh ke kanan lalu melompat | Ease `x` bersama `width` |
+| Stop gradient putih transparan | Panel keruh terang, `background-color` hilang | Stop membawa warna permukaan |
+| `box-shadow` campur luar dan `inset` | Tidak ada bayangan sama sekali | Satu bayangan per aktor |
+| `clip_to_allocation` di aktor akar | Bayangan luar terpotong | Jangan dipasang |
+| Shell uji di session bus privat | Shell menyalakan `ibus-daemon` sendiri yang tertinggal dan membengkak | Stub `ibus-daemon`, scope dengan `MemoryMax` |
 | `addChrome` dengan `affectsStruts: true` | Panel bawah ikut bergeser | Jangan pakai struts |
 | Animasi `width`/`height` sambil ganti teks | Teks melompat, layout berkedip | Fade konten dulu |
 | `St.Icon` dengan nama ikon salah | Ikon kosong, tidak ada error | Cek `Gtk.IconTheme.has_icon` atau fallback |

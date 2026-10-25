@@ -1,6 +1,6 @@
 # ADR 0002: JavaScript + JSDoc untuk v1, bukan TypeScript
 
-Status: **diusulkan**, menunggu persetujuan.
+Status: **diterima** (2026-10-24).
 
 Tanggal: 2026-10-24
 

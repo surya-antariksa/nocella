@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.nocella"
+          path="/org/gnome/shell/extensions/nocella/">
+    <key name="notch-enabled" type="b">
+      <default>true</default>
+      <summary>Enable the notch</summary>
+    </key>
+    <key name="hotkey" type="as">
+      <default><![CDATA[['<Super>i']]]></default>
+      <summary>Shortcut to toggle the notch panel</summary>
+    </key>
+    <key name="intercept-banners" type="b">
+      <default>true</default>
+      <summary>Show notifications in the notch instead of GNOME banners</summary>
+    </key>
+  </schema>
+</schemalist>

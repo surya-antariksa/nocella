@@ -1,8 +1,9 @@
 # Build and packaging output
 *.zip
 dist/
-schemas/gschemas.compiled
-po/*.mo
+build/
+**/schemas/gschemas.compiled
+**/po/*.mo
 
 # Tooling
 node_modules/

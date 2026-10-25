@@ -40,7 +40,7 @@ Berlaku sejak berkas kode pertama di fase 1, untuk ekstensi, bridge agen, tes, d
 
 ## Fase 0: Rancangan
 
-**Status: sedang berjalan.**
+**Status: selesai.** G0 disetujui 2026-10-24.
 
 Keluaran:
 
@@ -50,21 +50,21 @@ Keluaran:
 
 Gate G0:
 
-- [ ] Setuju memakai GNOME Shell extension, bukan pindah ke Hyprland/Quickshell.
-- [ ] Setuju JavaScript + JSDoc untuk v1.
-- [ ] Setuju notch mengambil alih area jam.
-- [ ] Setuju bentuk notch menempel di tepi atas (`y=0`), sudut atas siku, sudut bawah membulat.
-- [ ] Setuju faux vibrancy tanpa blur asli di v1, dengan aksen biru macOS `#0A84FF`.
-- [ ] Setuju palet warna dan material di `03-desain-visual.md` (lihat `palet-warna.svg`).
-- [ ] Setuju notifikasi diambil alih (`bannerBlocked`), dengan fallback cermin.
-- [ ] Setuju ruang lingkup v1: satu monitor, tanpa blur, tanpa kalender acara.
-- [ ] Setuju konvensi kode: semua kode dalam bahasa Inggris, teks UI lewat gettext.
+- [x] Setuju memakai GNOME Shell extension, bukan pindah ke Hyprland/Quickshell.
+- [x] Setuju JavaScript + JSDoc untuk v1.
+- [x] Setuju notch mengambil alih area jam.
+- [x] Setuju bentuk notch menempel di tepi atas (`y=0`), sudut atas siku, sudut bawah membulat.
+- [x] Setuju faux vibrancy tanpa blur asli di v1, dengan aksen biru macOS `#0A84FF`.
+- [x] Setuju palet warna dan material di `03-desain-visual.md` (lihat `palet-warna.svg`).
+- [x] Setuju notifikasi diambil alih (`bannerBlocked`), dengan fallback cermin.
+- [x] Setuju ruang lingkup v1: satu monitor, tanpa blur, tanpa kalender acara.
+- [x] Setuju konvensi kode: semua kode dalam bahasa Inggris, teks UI lewat gettext.
 
 Kalau salah satu belum disetujui, jangan mulai fase 1.
 
 ## Fase 1: Kerangka
 
-**Hari 1-5.**
+**Hari 1-5. Status: berjalan.**
 
 Pekerjaan:
 
@@ -83,14 +83,17 @@ dan jam kembali saat disable.
 
 Gate G1:
 
-- [ ] Notch muncul di tengah pada skala 1 dan 2, tanpa gap di tepi atas.
-- [ ] Sudut atas siku, sudut bawah membulat, tidak terlihat seperti kapsul.
-- [ ] Buka/tutup 20 kali tanpa error.
-- [ ] Disable mengembalikan jam GNOME.
-- [ ] Tidak ada timer atau signal yang tersisa setelah disable.
-- [ ] Waktu buka < 100 ms sampai konten pertama terlihat.
-- [ ] Screenshot skala 1 dan 2 dibandingkan dengan `03-desain-visual.md`.
-- [ ] Kode fase 1 mengikuti konvensi kode: bahasa Inggris, string UI lewat `_()`.
+- [x] Notch muncul di tengah pada skala 1 dan 2, tanpa gap di tepi atas (smoke test).
+- [x] Sudut atas siku, sudut bawah membulat, tidak terlihat seperti kapsul (screenshot).
+- [x] Buka/tutup 20 kali tanpa error (smoke test; klik asli diuji terpisah lewat pointer
+      virtual).
+- [x] Disable mengembalikan jam GNOME (smoke test, 20 siklus).
+- [ ] Tidak ada timer atau signal yang tersisa setelah disable. Sebagian: 20 siklus
+      tanpa kebocoran aktor dan tanpa error log; belum diverifikasi langsung.
+- [ ] Waktu buka < 100 ms sampai konten pertama terlihat. Belum diukur.
+- [ ] Screenshot skala 1 dan 2 dibandingkan dengan `03-desain-visual.md`. Bentuk dan
+      material sudah; perbandingan dengan panel asli menunggu sesi nested/asli.
+- [x] Kode fase 1 mengikuti konvensi kode: bahasa Inggris, string UI lewat `_()`.
 
 Risiko utama: `Main.panel.height` belum tersedia saat enable. Fallback ke 32.
 

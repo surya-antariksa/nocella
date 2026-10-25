@@ -49,6 +49,53 @@ GJS tidak menyediakan modul `assert` Node. Tulis helper kecil seperti di atas, a
 pakai `GLib.test` kalau butuh runner yang lebih lengkap. Jangan menambahkan
 Jest/Vitest. Itu membawa Node dan build step yang tidak diperlukan.
 
+Semua unit test dijalankan dengan `tests/run.sh`, yang keluar dengan status 1 kalau ada
+yang gagal.
+
+## Smoke test headless
+
+`tests/smoke/run.sh [skala]` memasang hasil `scripts/pack.sh` ke GNOME Shell headless
+(`--headless --virtual-monitor`), lalu `tests/smoke/driver.js` memeriksa lewat
+`org.gnome.Shell.Eval`:
+
+- Notch aktif, di tengah, menempel di tepi atas, setinggi panel, dan jam GNOME
+  tersembunyi.
+- Panel terbuka 420x240 tetap di tengah, jam tetap di header setinggi panel, lalu kembali
+  ke notch.
+- Klik kiri asli lewat pointer virtual membuka dan menutup panel, klik kanan tidak
+  berpengaruh, dan overview saat panel terbuka menyembunyikan notch lalu
+  mengembalikannya dalam keadaan tertutup.
+- 20 kali buka/tutup cepat lewat pemanggilan langsung, overview menyembunyikan notch, dan 20 siklus
+  disable/enable tanpa kebocoran aktor.
+- Log shell bersih dari error Nocella, termasuk `JS ERROR` yang jejak tumpukannya
+  mengarah ke berkas Nocella, dan tidak ada proses yang tertinggal.
+
+Screenshot dan log masuk ke `build/smoke/`. Skala 2 memakai monitor virtual 3840x2160
+dan `scaling-factor` 2.
+
+Isolasi dan pengaman:
+
+- `XDG_*` (termasuk dconf dan folder ekstensi), runtime dir, session bus, dan socket
+  Wayland semuanya privat. Ekstensi bantu `unsafe-mode@nocella.test` hanya dipasang di
+  sesi uji, supaya `Eval` dan `Screenshot` bisa dipakai.
+- Seluruh uji berjalan di scope systemd dengan `MemoryMax` (bawaan 1536M) dan tanpa swap,
+  dan butuh minimal 3 GiB RAM tersedia sebelum mulai. Pemakaian memori dicatat tiap
+  detik di `build/smoke/memory-x<skala>.log`, lalu proses yang tertinggal dilaporkan
+  dan dihentikan.
+- Bus privat hanya bisa menyalakan dconf, dan `ibus-daemon` diganti stub. Tanpa
+  pengaman ini, pada 2026-10-24 setiap shell uji menyalakan `ibus-daemon` sendiri yang
+  tertinggal dan membengkak. Enam instance mencapai sekitar 10,5 GB dan membuat laptop
+  pengembang kehabisan RAM. Dengan pengaman, puncak satu putaran uji sekitar 190 MiB.
+- Ctrl-C tetap menghentikan seluruh scope, shell diberi 5 detik untuk berhenti sebelum
+  dipaksa, dan uji menolak jalan kalau batas memori cgroup tidak aktif.
+- `scripts/nested.sh` memakai sandbox yang sama untuk uji manual.
+- `NOCELLA_SMOKE_DRIVER` menjalankan driver lain (misalnya eksperimen gaya) di sandbox
+  yang sama.
+
+Batasan: panel GNOME di sesi headless tampil transparan, jadi perbandingan warna
+dengan panel asli (`#131313`) tetap dilakukan di nested shell atau sesi asli. Fullscreen
+belum diuji otomatis karena butuh jendela klien.
+
 ## Matriks kompatibilitas
 
 | Dimensi | Nilai wajib uji | Catatan |

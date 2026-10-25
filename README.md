@@ -6,9 +6,9 @@ Nocella menempel di tepi atas layar seperti notch MacBook, lalu membesar seperti
 Dynamic Island saat ada media, notifikasi, atau aktivitas lain. Setelah selesai, ia
 kembali menjadi potongan hitam kecil yang tenang.
 
-Status: **rancangan**. Belum ada kode ekstensi. Folder ini hanya berisi dokumen desain,
-keputusan arsitektur, dan rencana kerja. Tujuannya menyepakati bentuk, perilaku, dan
-batasan teknis dulu sebelum menulis satu baris JavaScript pun.
+Status: **fase 1 (kerangka)**. Sudah ada notch tertutup dengan jam, panel kosong yang
+dibuka dan ditutup dengan klik, dan material dasarnya. Fitur seperti media dan
+notifikasi menyusul sesuai [roadmap](docs/09-roadmap.md).
 
 ## Arah desain
 
@@ -84,6 +84,29 @@ Kalau baru pertama kali: baca `01-konsep.md`, lalu `03-desain-visual.md` dan
 - Tema gelap (`color-scheme: prefer-dark`), animasi aktif
 - `gjs`, `python3`, `node` tersedia. `quickshell`, `eww`, `waybar`, `ags` tidak ada.
 - MPRIS aktif (Firefox terdeteksi), PipeWire tersedia lewat `wpctl`
+
+## Struktur repo
+
+| Folder | Isi |
+|---|---|
+| `extension/` | Kode ekstensi, dipasang sebagai `nocella@antariksa` |
+| `tests/` | Unit test GJS (`tests/run.sh`) dan smoke test headless (`tests/smoke/run.sh`) |
+| `scripts/` | Pack, install, nested shell, dan pembaruan terjemahan |
+| `types/` | Deklarasi tipe ambient untuk `// @ts-check` |
+| `docs/`, `adr/`, `riset/` | Rancangan, keputusan, dan riset |
+
+## Pengembangan
+
+```bash
+tests/run.sh                 # unit test logika murni, tanpa GNOME Shell
+tests/smoke/run.sh           # GNOME Shell headless terisolasi, cek gate fase 1
+scripts/install.sh           # pack lalu pasang untuk user ini (perlu logout/login di Wayland)
+scripts/nested.sh            # jendela GNOME Shell nested untuk uji manual
+npx -p typescript tsc -p jsconfig.json   # cek tipe JSDoc, opsional
+```
+
+Smoke test berjalan di scope systemd dengan batas RAM 1,5 GB. Detail dan alasannya ada
+di [docs/08-pengujian.md](docs/08-pengujian.md#smoke-test-headless).
 
 ## Lisensi
 

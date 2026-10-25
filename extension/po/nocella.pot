@@ -1,0 +1,14 @@
+# Nocella translation template.
+# This file is distributed under the same license as the Nocella package.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: nocella\n"
+"Report-Msgid-Bugs-To: https://github.com/surya-antariksa/nocella/issues\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/ui/surface.js:23
+msgid "Notch"
+msgstr ""

@@ -1,0 +1,10 @@
+{
+  "uuid": "nocella@antariksa",
+  "name": "Nocella",
+  "description": "MacBook-style notch with Dynamic Island behavior for GNOME Shell",
+  "shell-version": ["46"],
+  "url": "https://github.com/surya-antariksa/nocella",
+  "settings-schema": "org.gnome.shell.extensions.nocella",
+  "gettext-domain": "nocella",
+  "version": 1
+}

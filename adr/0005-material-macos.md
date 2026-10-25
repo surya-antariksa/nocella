@@ -1,6 +1,6 @@
 # ADR 0005: Bahasa visual MacBook dan faux vibrancy
 
-Status: **diusulkan**, menunggu persetujuan.
+Status: **diterima** (2026-10-24).
 
 Tanggal: 2026-10-24
 

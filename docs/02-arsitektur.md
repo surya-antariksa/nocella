@@ -164,7 +164,7 @@ Contoh: lagu berganti.
 ## Struktur berkas ekstensi
 
 ```
-nocella@antariksa/
+extension/                (dipasang sebagai nocella@antariksa/)
 ├── metadata.json
 ├── extension.js
 ├── prefs.js
@@ -176,6 +176,9 @@ nocella@antariksa/
 │   ├── state.js
 │   ├── arbiter.js
 │   ├── settings.js
+│   ├── tokens.js
+│   ├── geometry.js
+│   ├── clock-takeover.js
 │   ├── providers/
 │   │   ├── clock.js
 │   │   ├── media.js
@@ -190,12 +193,16 @@ nocella@antariksa/
 │   │   ├── views/
 │   │   └── components/
 │   └── util/
+│       ├── signal-group.js
 │       ├── dbus.js
 │       ├── proc.js
 │       └── guards.js
-├── po/
-└── README.md
+└── po/
 ```
+
+Di luar `extension/` ada `tests/` (unit test GJS dan smoke test headless), `scripts/`
+(pack, install, nested shell, pembaruan terjemahan), `types/` (deklarasi tipe ambient
+untuk `@ts-check`), dan `jsconfig.json`.
 
 Semua impor internal memakai path relatif ESM, misalnya
 `import {MediaProvider} from './providers/media.js';`. Tidak ada `node_modules`, tidak

@@ -26,7 +26,9 @@ logo Apple. Yang diambil adalah rasa: tenang, presisi, dan tidak berlebihan.
 
 ## Geometri
 
-Semua angka untuk skala 1. St mengalikan sendiri pada skala 2; jangan mengalikan manual.
+Semua angka untuk skala 1. St hanya mengalikan ukuran yang ditulis di CSS. Ukuran yang
+diatur lewat JavaScript (`width`, `height`, posisi) dalam piksel device, jadi harus
+dikalikan `St.ThemeContext.scale_factor`. `Main.panel.height` sudah dalam piksel device.
 
 | Elemen | Ukuran | Radius | Catatan |
 |---|---|---|---|
@@ -104,17 +106,22 @@ Tiga tingkat material:
 Resep faux vibrancy untuk panel terbuka:
 
 ```css
-background-color: rgba(24, 24, 26, 0.82);
 background-gradient-direction: vertical;
-background-gradient-start: rgba(255, 255, 255, 0.06);
-background-gradient-end: rgba(255, 255, 255, 0);
-box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55),
-            0 2px 8px rgba(0, 0, 0, 0.35),
-            inset 0 -1px 0 rgba(255, 255, 255, 0.10);
+/* rgba(24, 24, 26, 0.82) with 6% white composited on top */
+background-gradient-start: rgba(41, 41, 43, 0.83);
+background-gradient-end: rgba(24, 24, 26, 0.82);
+box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
 ```
 
-St tidak punya `border-bottom` per sisi. Hairline bawah dibuat dengan
-`box-shadow: inset 0 -1px 0`, bukan border.
+Di St, gradient menggantikan `background-color`. Karena itu kedua stop membawa warna
+permukaan; stop putih transparan di atas `background-color` membuat panel tampak keruh
+terang. St juga hanya menggambar satu `box-shadow`, dan daftar yang mencampur bayangan
+luar dengan `inset` tidak digambar sama sekali. Kedua perilaku ini diuji di GNOME 46
+pada fase 1.
+
+St tidak punya `border-bottom` per sisi. Notch tertutup tidak punya bayangan luar, jadi
+hairline 6%-nya memakai `box-shadow: inset 0 -1px 0`. Hairline 10% di panel terbuka
+tidak bisa digabung dengan bayangan besar, jadi digambar oleh aktor terpisah di fase 7.
 
 Ini bukan blur asli. St tidak punya `backdrop-filter`, dan `Shell.BlurEffect` memblur
 isi aktor, bukan latar di belakangnya. Efek kaca dibuat dari translusensi, gradient, dan
@@ -425,8 +432,12 @@ Jangan:
 - `border-radius: 0 0 16px 16px` didukung. `border-bottom` per sisi tidak didukung;
   pakai `box-shadow: inset 0 -1px 0` untuk hairline.
 - `background-gradient-direction` dan `background-gradient-start/end` dipakai untuk
-  gradient vertikal.
-- `box-shadow` didukung, termasuk beberapa lapis.
+  gradient vertikal. Gradient menggantikan `background-color`, jadi kedua stop harus
+  membawa warna permukaan.
+- `box-shadow` hanya satu bayangan, luar atau `inset`. Campuran keduanya tidak
+  digambar. Hairline plus bayangan besar butuh aktor terpisah.
+- Jangan memasang `clip_to_allocation` pada aktor yang punya bayangan luar; bayangannya
+  ikut terpotong.
 - Untuk switch dan slider, gambar sendiri dengan `St.DrawingArea` dan Cairo supaya
   bentuknya persis. Jangan memakai widget GTK.
 - Hairline 1 px CSS menjadi 2 px device pada skala 2. Itu benar, jangan dikompensasi.

@@ -1,0 +1,35 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
+/* Values come from docs/03-desain-visual.md and mirror src/tokens.js.
+ * Text sizes use pt so GNOME text scaling applies (13 px = 9.75 pt). */
+
+/* Level 0: collapsed notch. Black in both themes, like a hardware bezel. */
+.nocella {
+    background-color: #000000;
+    border-radius: 0 0 16px 16px;
+    /* St has no per-side borders; an inset shadow draws the bottom hairline. */
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+    padding: 0 16px;
+    color: #F5F5F7;
+    font-family: "SF Pro Text", "SF Pro Display", "Inter",
+                 "Ubuntu Sans", "Cantarell", sans-serif;
+}
+
+/* Level 2: pinned panel, faux vibrancy without a real blur.
+ * In St the gradient replaces background-color, so both stops carry the surface:
+ * the start is rgba(24, 24, 26, 0.82) with 6% white composited on top.
+ * St draws a single box-shadow; mixing an inset hairline into the list drops the
+ * shadow entirely, so the bottom hairline waits for a separate actor. */
+.nocella.expanded {
+    background-gradient-direction: vertical;
+    background-gradient-start: rgba(41, 41, 43, 0.83);
+    background-gradient-end: rgba(24, 24, 26, 0.82);
+    border-radius: 0 0 26px 26px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+}
+
+.nocella-clock {
+    font-size: 9.75pt;
+    font-weight: 600;
+    font-feature-settings: "tnum";
+}

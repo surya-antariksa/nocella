@@ -1,0 +1,14 @@
+# Indonesian translation for Nocella.
+# This file is distributed under the same license as the Nocella package.
+msgid ""
+msgstr ""
+"Project-Id-Version: nocella\n"
+"Report-Msgid-Bugs-To: https://github.com/surya-antariksa/nocella/issues\n"
+"Language: id\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: src/ui/surface.js:23
+msgid "Notch"
+msgstr "Notch"
