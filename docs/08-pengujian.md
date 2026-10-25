@@ -125,6 +125,24 @@ antarmuka `id.antariksa.Nocella.TestPlayer`:
 - Player hilang saat diputar ditahan sekitar 2 detik, lalu media kosong, ekstensi tetap
   aktif, dan tab media menampilkan keadaan kosong.
 
+Fase 3, dengan `notify-send` asli. Bus privat uji kini juga boleh menyalakan
+`org.gnome.Shell.Notifications`, jembatan GNOME 46 yang memegang
+`org.freedesktop.Notifications`:
+
+- Notifikasi membuka transien 420x92, banner GNOME tidak tampil, dan transien menutup
+  setelah 6 detik. Pill aksi utama mengembalikan nama aksi ke `notify-send -A`.
+- Tiga notifikasi dari aplikasi yang sama dalam 3 detik menjadi satu kartu dengan `+2`.
+  Pengelompokan memakai nama aplikasi, karena GNOME membuat satu source per proses
+  pengirim.
+- Notifikasi kritis ber-TTL 60 detik, dan setelah ditutup badge tetap merah.
+- DND mematikan `bannerBlocked` (GNOME tetap memakai aturannya untuk yang kritis), tidak
+  ada transien, dan badge oranye.
+- Tab "Hari ini" menampilkan 5 terbaru dengan "Show all", daftar lengkap ada di area
+  gulir, "Clear" menghapus dari GNOME juga, dan membuka daftar menandai semua dibaca.
+- Fullscreen (D9) dan uji beban 100 notifikasi seperti di G3.
+- Mode cermin: setter `bannerBlocked` dihapus selama ekstensi mati, lalu ekstensi
+  dinyalakan lagi. Notch dan banner GNOME keduanya tampil.
+
 Untuk semua fase:
 
 - Log shell bersih dari error Nocella, termasuk `JS ERROR` yang jejak tumpukannya

@@ -159,9 +159,36 @@ export class NotchSurface {
     }
 
     /**
-     * Shows `page` in the body. The previous page is only removed, not destroyed, so the
-     * next opening is fast. The new one fades in after a short delay, so text never
-     * changes while the size animates (docs/03-desain-visual.md, "Motion").
+     * Puts pages into the body ahead of time, hidden. A hidden page keeps its style and
+     * text layout, so the first opening does not pay for them (docs/02-arsitektur.md:
+     * views are hidden, not destroyed).
+     *
+     * @param {any[]} pages actors
+     */
+    preload(pages) {
+        for (const page of pages) {
+            if (page.get_parent() !== this._body) {
+                page.hide();
+                this._body.add_child(page);
+            }
+        }
+    }
+
+    /**
+     * Measures the hidden pages once, so their theme nodes and text layouts exist before
+     * the first click.
+     *
+     * @param {number} width device pixels
+     */
+    warmUp(width) {
+        for (const page of this._body.get_children())
+            page.get_preferred_height(width);
+    }
+
+    /**
+     * Shows `page` in the body and hides the previous one. The new one fades in after a
+     * short delay, so text never changes while the size animates
+     * (docs/03-desain-visual.md, "Motion").
      *
      * @param {any} page an actor, or null for an empty body
      * @param {boolean} animate
@@ -169,12 +196,12 @@ export class NotchSurface {
     setPage(page, animate) {
         if (page === this._page)
             return;
-        if (this._page)
-            this._body.remove_child(this._page);
+        this._page?.hide();
         this._page = page;
         if (!page)
             return;
-        this._body.add_child(page);
+        this.preload([page]);
+        page.show();
         page.remove_transition('opacity');
         if (animate) {
             page.opacity = 0;

@@ -174,7 +174,10 @@ Aturan:
 - Notifikasi `LOW` tidak pernah muncul sebagai transien. Hanya masuk daftar.
 - Notifikasi `CRITICAL` bertahan sampai pengguna menutup atau membuka aksinya, dengan
   batas pengaman 60 detik. Setelah itu notch menutup dan badge merah tetap terlihat.
-- Notifikasi dari aplikasi yang sama digabung dalam jendela 3 detik.
+- Notifikasi dari aplikasi yang sama digabung dalam jendela 3 detik. Kuncinya nama
+  aplikasi (`source.title`), bukan objek source, karena GNOME membuat source per proses
+  pengirim. Notifikasi pertama langsung tampil tanpa debounce; yang berikutnya
+  memperbarui kartu yang sama lewat koalesensi arbiter.
 - Daftar pinned menampilkan 5 notifikasi terbaru. Tombol "Lihat semua" memperluas
   daftar di dalam panel (`St.ScrollView`, maksimal 50 terbaru) yang dibangun hanya saat
   dibuka. Pusat notifikasi GNOME tidak dibuka dari sini karena `dateMenu`

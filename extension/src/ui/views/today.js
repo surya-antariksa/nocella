@@ -23,9 +23,11 @@ export class TodayPage {
      * @param {object} params
      * @param {any} params.wallClock the shared `GnomeDesktop.WallClock`
      * @param {() => void} [params.onLaunch] called after an app was launched
+     * @param {import('./notifications.js').NotificationList} [params.notifications]
      */
-    constructor({wallClock, onLaunch = () => {}}) {
+    constructor({wallClock, onLaunch = () => {}, notifications}) {
         this._wallClock = wallClock;
+        this._notifications = notifications ?? null;
         this._onLaunch = onLaunch;
         this._visible = false;
         this._renderedDay = '';
@@ -64,28 +66,32 @@ export class TodayPage {
         top.add_child(this._grid);
         this.actor.add_child(top);
 
-        // Filled by the notifications view in phase 3.
-        this.slot = new St.BoxLayout({vertical: true, x_expand: true, style_class: 'nocella-stack'});
-        this.actor.add_child(this.slot);
+        if (this._notifications)
+            this.actor.add_child(this._notifications.actor);
 
         // The date can change while the panel is open (midnight).
         this._clockId = wallClock.connect('notify::clock', () => {
             if (this._visible)
                 this._renderDate();
         });
+        // Built now, not on the first click, so opening stays fast.
+        this._renderDate();
     }
 
     show() {
         this._visible = true;
         this._renderDate();
+        this._notifications?.show();
     }
 
     hide() {
         this._visible = false;
+        this._notifications?.hide();
     }
 
     refresh() {
         this._renderDate();
+        this._notifications?.refresh();
     }
 
     _renderDate() {
@@ -157,6 +163,7 @@ export class TodayPage {
     destroy() {
         this._wallClock.disconnect(this._clockId);
         this._binding.unbind();
+        this._notifications = null;
         this.actor.destroy();
     }
 }

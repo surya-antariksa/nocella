@@ -132,7 +132,8 @@ Gate G2:
 
 ## Fase 3: Notifikasi
 
-**Hari 11-14.**
+**Hari 11-14. Status: selesai.** G3 lulus 2026-10-25 lewat smoke test skala 1 dan 2 dengan
+`notify-send` asli ke shell uji.
 
 Pekerjaan:
 
@@ -147,13 +148,20 @@ Keluaran: notifikasi muncul di notch, banner GNOME tidak dobel.
 
 Gate G3:
 
-- [ ] `notify-send` muncul di notch.
-- [ ] Banner GNOME tidak muncul saat notch aktif.
-- [ ] Aksi notifikasi berfungsi.
-- [ ] Saat DND, notifikasi tidak memunculkan transien di notch, hanya menaikkan badge.
-- [ ] Masuk fullscreen mengembalikan `bannerBlocked` ke `false` (uji D9).
-- [ ] 100 notifikasi tidak membuat memori naik > 10 MB.
-- [ ] Fallback cermin bekerja kalau `bannerBlocked` dihapus (simulasi mock).
+- [x] `notify-send` muncul di notch (transien 420x92).
+- [x] Banner GNOME tidak muncul saat notch aktif (`Main.messageTray.visible` tetap
+      `false`).
+- [x] Aksi notifikasi berfungsi (pill utama mengembalikan nama aksi ke `notify-send -A`).
+- [x] Saat DND, notifikasi tidak memunculkan transien di notch, hanya menaikkan badge
+      oranye.
+- [x] Masuk fullscreen mengembalikan `bannerBlocked` ke `false` (uji D9): langsung saat
+      masuk, notifikasi yang sudah tampil di notch tidak diantrekan ulang, notifikasi
+      berikutnya tetap ada di antrean GNOME, dan yang kritis tampil sebagai banner GNOME.
+      Fullscreen disimulasikan lewat `get_monitor_in_fullscreen`.
+- [x] 100 notifikasi tidak membuat memori naik > 10 MB (naik 1,6 MiB di skala 1 dan
+      4,8 MiB di skala 2).
+- [x] Fallback cermin bekerja kalau `bannerBlocked` dihapus (setter dihapus dari prototipe
+      di shell uji: notch dan banner GNOME sama-sama tampil, log mencatat sekali).
 
 Risiko utama: API `bannerBlocked` bisa berubah di GNOME 47. Fallback harus benar-benar
 diuji, bukan hanya ditulis.

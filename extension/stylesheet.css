@@ -263,9 +263,29 @@
     spacing: 8px;
 }
 
+.nocella-page-list .nocella-card {
+    padding: 10px 12px;
+}
+
 /* "Show all" scrolls inside the panel instead of growing it past the screen. */
 .nocella-scroll {
     max-height: 240px;
+}
+
+/* A slim scrollbar beside the cards, not over their text. */
+.nocella-scroll StScrollBar {
+    padding-left: 6px;
+    min-width: 4px;
+}
+
+.nocella-scroll StScrollBar StBin#trough {
+    background-color: transparent;
+}
+
+.nocella-scroll StScrollBar StButton#vhandle {
+    min-width: 4px;
+    border-radius: 2px;
+    background-color: rgba(255, 255, 255, 0.20);
 }
 
 /* System metrics (docs/03-desain-visual.md, "Metrik sistem"). */
@@ -329,6 +349,11 @@
 .nocella.expanded.light .nocella-workspace { color: #1D1D1F; background-color: rgba(0, 0, 0, 0.06); }
 .nocella.expanded.light .nocella-workspace.empty { color: #6E6E73; }
 .nocella.expanded.light .nocella-workspace.active { color: #FFFFFF; background-color: #0A84FF; }
+
+.nocella-slider {
+    height: 24px;
+    min-width: 120px;
+}
 
 .nocella-empty {
     font-size: 9pt;

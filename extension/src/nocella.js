@@ -9,18 +9,21 @@ import GObject from 'gi://GObject';
 import Shell from 'gi://Shell';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import {gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
+import {gettext as _, ngettext} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 import {Arbiter} from './arbiter.js';
+import {BannerBlock} from './banner-block.js';
 import {ClockTakeover} from './clock-takeover.js';
 import {collapsedSize, surfaceSize} from './geometry.js';
 import {Hotkey} from './hotkey.js';
 import {MediaProvider} from './providers/media.js';
+import {NotificationsProvider} from './providers/notifications.js';
 import {State, StateMachine} from './state.js';
-import {Duration} from './tokens.js';
+import {Duration, Size} from './tokens.js';
 import {SegmentedControl} from './ui/components/segmented.js';
 import {NotchSurface} from './ui/surface.js';
 import {MediaPage, MediaTransient, mediaPeekLine} from './ui/views/media.js';
+import {NotificationList, NotificationTransient} from './ui/views/notifications.js';
 import {TodayPage} from './ui/views/today.js';
 import {SignalGroup} from './util/signal-group.js';
 import {TimerGroup} from './util/timer-group.js';
@@ -45,6 +48,7 @@ import {TimerGroup} from './util/timer-group.js';
 const EVENT_ROUTES = Object.freeze({
     'media-changed': {kind: 'media', view: 'media'},
     'media-status': {kind: 'media', view: 'media'},
+    'notification': {kind: 'notification', view: 'today'},
 });
 
 /**
@@ -95,6 +99,18 @@ export class Nocella {
         /** @type {any} */
         this._peekLabel = null;
         this._sleepWatchId = 0;
+        /** @type {any} */
+        this._notifications = null;
+        /** @type {any} */
+        this._notificationList = null;
+        /** @type {any} */
+        this._banner = null;
+        /** @type {any} */
+        this._a11ySettings = null;
+        /** @type {any} */
+        this._notificationSettings = null;
+        /** @type {string | null} the notification transient on screen */
+        this._shownNotification = null;
     }
 
     enable() {
@@ -147,13 +163,36 @@ export class Nocella {
             autoExpand: () => this._settings.get_boolean('auto-expand-media'),
         });
         this._providers.push(this._media);
+        this._notifications = new NotificationsProvider({
+            emit: event => this._onEvent(event),
+            changed: () => {
+                // A notification closed elsewhere also ends its transient.
+                const content = this._state?.content;
+                if (content?.type === 'notification' && !this._notifications.find(content.payload.key))
+                    this._state.close();
+                this._refreshPages(['today', 'notification']);
+                this._syncDot();
+            },
+            autoExpand: () => this._settings.get_boolean('auto-expand-notifications'),
+        });
+        this._providers.push(this._notifications);
 
+        this._notificationList = new NotificationList({
+            provider: this._notifications,
+            onDone: () => this._state.close(),
+        });
         this._addPinnedPage('today', new TodayPage({
             wallClock: this._wallClock,
             onLaunch: () => this._state.close(),
+            notifications: this._notificationList,
         }));
         this._addPinnedPage('media', new MediaPage(this._media));
         this._transientPages.set('media', new MediaTransient(this._media));
+        this._transientPages.set('notification', new NotificationTransient({
+            provider: this._notifications,
+            payload: () => this._state.content?.payload ?? null,
+            onDone: () => this._state.close(),
+        }));
         this._syncTabs();
 
         const relayout = () => this._applyGeometry(0);
@@ -181,11 +220,29 @@ export class Nocella {
         this._signals.add(global.display,
             global.display.connect('in-fullscreen-changed', () => this._syncFullscreen()));
         this._signals.add(Main.overview,
-            Main.overview.connect('showing', () => this._state.suppress('overview')));
+            Main.overview.connect('showing', () => {
+                this._state.suppress('overview');
+                this._syncBanner();
+            }));
         this._signals.add(Main.overview,
-            Main.overview.connect('hidden', () => this._state.release('overview')));
+            Main.overview.connect('hidden', () => {
+                this._state.release('overview');
+                this._syncBanner();
+            }));
         this._signals.add(this._settings,
             this._settings.connect('changed::notch-enabled', () => this._syncEnabled()));
+
+        // Banner takeover (ADR 0004): every input of the decision is watched.
+        this._banner = new BannerBlock();
+        this._a11ySettings = new Gio.Settings({schema_id: 'org.gnome.desktop.a11y.applications'});
+        this._notificationSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.notifications'});
+        const syncBanner = () => this._syncBanner();
+        for (const key of ['intercept-banners', 'auto-expand-notifications'])
+            this._signals.add(this._settings, this._settings.connect(`changed::${key}`, syncBanner));
+        this._signals.add(this._a11ySettings,
+            this._a11ySettings.connect('changed::screen-reader-enabled', syncBanner));
+        this._signals.add(this._notificationSettings,
+            this._notificationSettings.connect('changed::show-banners', syncBanner));
 
         this._hotkey = new Hotkey(this._settings, () => this._state.toggle(this._lastView));
         this._hotkey.enable();
@@ -223,9 +280,28 @@ export class Nocella {
         // Hide the GNOME clock last, once the notch is in place (ADR 0003).
         this._clockTakeover = new ClockTakeover();
         this._syncEnabled();
+        this._syncBanner();
+
+        // Pages live hidden in the surface; measuring them once at idle keeps the first
+        // click under the open-time target.
+        surface.preload([this._peekLabel,
+            ...[...this._pinnedPages.values(), ...this._transientPages.values()].map(page => page.actor)]);
+        this._timers.timeout(0, () => {
+            this._surface?.warmUp(Size.PINNED_WIDTH * this._themeContext.scale_factor);
+        });
     }
 
     disable() {
+        // GNOME banners come back first, so nothing is lost if anything below fails.
+        if (this._banner) {
+            try {
+                this._banner.forgetShown(n => this._notifications?.wasShown(n) ?? false);
+            } finally {
+                this._banner.restore();
+                this._banner = null;
+            }
+        }
+
         this._clockTakeover?.disable();
         this._clockTakeover = null;
 
@@ -250,6 +326,11 @@ export class Nocella {
         }
         this._providers = [];
         this._media = null;
+        this._notifications = null;
+        // The list lives inside the today page and goes away with it.
+        this._notificationList = null;
+        this._a11ySettings = null;
+        this._notificationSettings = null;
 
         this._visiblePage = null;
         this._surface?.setPage(null, false);
@@ -339,20 +420,43 @@ export class Nocella {
         if (state !== State.TRANSIENT)
             this._arbiter.clear();
 
-        switch (this._arbiter.push(event)) {
-        case 'show':
+        const result = this._arbiter.push(event);
+        if (result === 'show')
             this._state.showTransient(event);
-            break;
-        case 'update':
+        else if (result === 'update')
             this._state.updateTransient(event);
-            break;
-        }
+        else
+            return;
+        if (event.type === 'notification' && this._state.content === event)
+            this._onNotificationShown(event.payload.key);
+    }
+
+    /**
+     * A notification is on screen in the notch. GNOME only plays its sound when it shows
+     * the banner itself, so with banners blocked the notch plays it.
+     *
+     * @param {string} key
+     */
+    _onNotificationShown(key) {
+        const notification = this._notifications.find(key)?.notification;
+        // Updates of a notification already on screen do not play the sound again.
+        if (!notification || this._notifications.wasShown(notification))
+            return;
+        this._notifications.markShown(key);
+        if (this._banner?.blocked)
+            notification.playSound?.();
     }
 
     /** @param {StateChange} change */
     _onStateChanged({state, previous, content, view}) {
         if (state === State.COLLAPSED || state === State.PINNED)
             this._arbiter.clear();
+
+        // A notification that leaves the screen expires if it was marked transient.
+        const shownKey = content?.type === 'notification' ? content.payload.key : null;
+        if (this._shownNotification && this._shownNotification !== shownKey)
+            this._notifications?.expireIfTransient(this._shownNotification);
+        this._shownNotification = shownKey;
 
         if (state === State.PINNED && view)
             this._lastView = view;
@@ -398,6 +502,7 @@ export class Nocella {
         if (state === State.PINNED && previous !== State.PINNED)
             this._takeModal();
         this._syncDot();
+        this._syncBanner();
 
         if (state === State.SUPPRESSED) {
             // Hidden at once with the collapsed size, so it comes back without shrinking.
@@ -435,7 +540,16 @@ export class Nocella {
         const media = this._media ? mediaPeekLine(this._media.snapshot()) : null;
         if (media)
             return media;
-        return GLib.DateTime.new_now_local().format('%A, %e %B').replace(/\s+/g, ' ');
+        const entries = this._notifications?.snapshot().entries ?? [];
+        const latest = entries.find(entry => !entry.notification.acknowledged);
+        if (latest) {
+            const {notification, source} = latest;
+            return `${source.title}: ${notification.title || notification.body || ''}`.trim();
+        }
+        const date = GLib.DateTime.new_now_local().format('%A, %e %B').replace(/\s+/g, ' ');
+        return entries.length > 0
+            ? `${date} · ${ngettext('%d notification', '%d notifications', entries.length).format(entries.length)}`
+            : date;
     }
 
     /** @returns {string} the view a click opens from the current state */
@@ -568,11 +682,13 @@ export class Nocella {
         surface.moveTo(monitor, size, duration, mode);
     }
 
+    /** Suppression can change without a state change (pinned over fullscreen). */
     _syncFullscreen() {
         if (Main.layoutManager.primaryMonitor?.inFullscreen)
             this._state.suppress('fullscreen');
         else
             this._state.release('fullscreen');
+        this._syncBanner();
     }
 
     /** `notch-enabled` off hides the notch and gives the GNOME clock back. */
@@ -584,6 +700,7 @@ export class Nocella {
             this._state.suppress('disabled');
             this._clockTakeover.disable();
         }
+        this._syncBanner();
     }
 
     _syncTheme() {
@@ -594,8 +711,29 @@ export class Nocella {
             page.setLight?.(light);
     }
 
-    /** Status dot color: gray when idle. Notifications and agents add colors. */
+    /**
+     * Whether GNOME's banners are blocked (ADR 0004, "Aturan state"): only while the
+     * notch is visible and able to show notifications, and never with a screen reader,
+     * during do not disturb (GNOME keeps applying its own critical rules), or with the
+     * takeover turned off. Unblocking first drops what the notch already showed from
+     * GNOME's queue, so nothing is shown twice.
+     */
+    _syncBanner() {
+        if (!this._banner)
+            return;
+        const state = this._state.state;
+        const blocked = this._settings.get_boolean('intercept-banners') &&
+            this._settings.get_boolean('auto-expand-notifications') &&
+            !this._a11ySettings.get_boolean('screen-reader-enabled') &&
+            this._notificationSettings.get_boolean('show-banners') &&
+            state !== State.SUPPRESSED && !this._state.pinnedOverSuppression;
+        if (!blocked)
+            this._banner.forgetShown(n => this._notifications.wasShown(n));
+        this._banner.set(blocked);
+    }
+
+    /** Status dot: red or orange for unread notifications, gray when idle. */
     _syncDot() {
-        this._surface.setDot(null);
+        this._surface?.setDot(this._notifications?.snapshot().badge ?? null);
     }
 }

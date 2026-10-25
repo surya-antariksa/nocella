@@ -90,6 +90,40 @@ Mitigasi:
 Transisi ke SUPPRESSED harus langsung mengembalikan `bannerBlocked` ke `false` sebelum
 notifikasi berikutnya datang. Jangan menunggu idle.
 
+## Catatan implementasi (fase 3)
+
+Hal yang terbukti di GNOME 46 saat implementasi (`src/banner-block.js`,
+`src/providers/notifications.js`):
+
+- `bannerBlocked` hanya punya setter. Nilai awal dibaca dari `_bannerBlocked` privat dan
+  dipulihkan di `disable()`.
+- Selama diblokir, GNOME tetap mengantrekan banner. Begitu blokir dilepas, antrean itu
+  ditampilkan. Karena itu, sebelum melepas blokir, notifikasi yang sudah ditampilkan notch
+  dihapus dari `_notificationQueue` privat (dengan pengecekan keberadaannya).
+- DND melepas blokir. Notch tidak menampilkan apa pun, dan GNOME tetap menampilkan banner
+  kritis sesuai aturannya sendiri.
+- Saat banner tidak diblokir (mode cermin, atau SUPPRESSED), handler GNOME untuk
+  `notification-request-banner` berjalan lebih dulu dan menandai notifikasi dibaca saat
+  menampilkan bannernya. Keputusan notch memakai status `acknowledged` dari saat
+  `notification-added`, yang datang tepat sebelumnya.
+- Di fullscreen, GNOME sendiri menahan banner biasa dan hanya menampilkan yang kritis.
+  Notifikasi tidak hilang; ia menunggu di antrean GNOME.
+- Handler GNOME untuk `in-fullscreen-changed` berjalan lebih dulu daripada milik Nocella.
+  Saat keluar fullscreen, GNOME langsung menampilkan banner yang ditahan dan menandainya
+  dibaca. Karena itu blokir tidak pernah dipasang di tengah banner GNOME
+  (`_notificationState` bukan HIDDEN). Blokir menunggu sampai tray GNOME kosong, sehingga
+  notifikasi yang ditahan tampil sebagai banner GNOME dan tidak beku tak terlihat. Banner
+  kritis GNOME bertahan sampai ditanggapi; selama itu notch berperan sebagai cermin.
+- Hanya notifikasi yang benar-benar tampil di notch yang dihapus dari antrean GNOME saat
+  blokir dilepas. Notifikasi yang dibuang saat SUPPRESSED, PINNED, atau oleh arbiter tetap
+  menunggu bannernya.
+- GNOME memutar suara notifikasi hanya saat menampilkan bannernya sendiri. Saat blokir
+  aktif, notch yang memanggil `playSound()` ketika notifikasi pertama kali tampil.
+- Notifikasi berhint `transient` dihapus (`EXPIRED`) setelah keluar dari notch, seperti
+  yang dilakukan GNOME saat bannernya hilang.
+- `bannerBlocked` juga ditulis GNOME saat menu panel di kotak tengah dibuka. Nocella
+  membandingkan dengan nilai sebenarnya (`_bannerBlocked`), bukan cache.
+
 ## Alternatif yang ditolak
 
 ### Cermin sejak awal

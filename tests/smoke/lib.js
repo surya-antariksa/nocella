@@ -140,7 +140,7 @@ export function nocellaState() {
             content: n._state.content?.type ?? null,
             queue: n._arbiter.queue.length,
             mode: n._surface.mode,
-            bodyChildren: n._surface._body.get_n_children(),
+            bodyChildren: n._surface._body.get_children().filter(c => c.visible).length,
             grab: n._grab !== null,
         };
     })()`);
@@ -204,6 +204,9 @@ export function clickAt(x, y, button = 'PRIMARY') {
         pointer.notify_button(now + 1000, Clutter.BUTTON_${button}, Clutter.ButtonState.PRESSED);
         pointer.notify_button(now + 2000, Clutter.BUTTON_${button}, Clutter.ButtonState.RELEASED);
     })()`);
+    // A pointer left on the notch would hover the next transient and hold its TTL.
+    sleep(50);
+    pointerAway();
 }
 
 /** Clicks on the empty desktop below the notch. */
@@ -352,8 +355,8 @@ export const INSTRUMENT = `(() => {
     const calledFromNocella = () =>
         (new Error().stack ?? '').split('\\n')[2]?.includes('/${UUID}/') ?? false;
     const record = globalThis.nocellaTestRecord =
-        {signals: [], sources: [], bindings: [], subscriptions: [], restore: [], unpatched: [],
-            sameGLib: null};
+        {signals: [], sources: [], bindings: [], subscriptions: [], reads: [], restore: [],
+            unpatched: [], sameGLib: null};
     // Extensions import gi://GLib; the timer patches only reach them if it is this object.
     import('gi://GLib').then(module => { record.sameGLib = module.default === GLib; },
         () => { record.sameGLib = false; });
@@ -420,6 +423,12 @@ export const INSTRUMENT = `(() => {
             return id;
         });
     }
+    // File reads (e.g. /proc) by Nocella, to prove that nothing is read while collapsed.
+    patch(GLib, 'file_get_contents', original => function (...args) {
+        if (calledFromNocella())
+            record.reads.push(args[0]);
+        return original.apply(this, args);
+    });
     for (const name of ['setTimeout', 'setInterval']) {
         patch(globalThis, name, original => function (...args) {
             const source = original.apply(this, args);
@@ -438,6 +447,15 @@ export const ACTIVE_SOURCES = `(() => {
         ? !s.source.is_destroyed()
         : GLib.MainContext.default().find_source_by_id(s.id) !== null)
         .map(s => ({name: s.name, interval: s.interval}));
+})()`;
+
+// Paths Nocella read since INSTRUMENT, or since the last call; the list is reset.
+export const TAKE_READS = `(() => {
+    const record = globalThis.nocellaTestRecord;
+    const reads = record?.reads ?? [];
+    if (record)
+        record.reads = [];
+    return reads;
 })()`;
 
 // Removes the instrumentation and reports what is still connected or scheduled.

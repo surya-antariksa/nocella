@@ -107,10 +107,12 @@ printf '#!/bin/sh\nexit 0\n' > "$work/bin/ibus-daemon"
 chmod +x "$work/bin/ibus-daemon"
 export PATH="$work/bin:$PATH"
 
-# A private bus that can activate dconf and nothing else, so Tracker, Evolution,
+# A private bus that can activate only dconf and GNOME Shell's notification bridge
+# (which owns org.freedesktop.Notifications for notify-send), so Tracker, Evolution,
 # Nautilus, and the portals stay off.
 mkdir -p "$work/dbus-services"
 cp /usr/share/dbus-1/services/ca.desrt.dconf.service "$work/dbus-services/"
+cp /usr/share/dbus-1/services/org.gnome.Shell.Notifications.service "$work/dbus-services/"
 cat > "$work/session-bus.conf" <<CONF
 <!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-Bus Bus Configuration 1.0//EN"
  "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">

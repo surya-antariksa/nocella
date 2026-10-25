@@ -13,8 +13,9 @@ import System from 'system';
 import {check, failureCount, prepareShell} from './lib.js';
 import * as phase1 from './phase1.js';
 import * as phase2 from './phase2.js';
+import * as phase3 from './phase3.js';
 
-const PHASES = {1: phase1, 2: phase2};
+const PHASES = {1: phase1, 2: phase2, 3: phase3};
 const selected = (GLib.getenv('NOCELLA_SMOKE_PHASES') ?? Object.keys(PHASES).join(','))
     .split(',').map(s => s.trim()).filter(Boolean);
 
