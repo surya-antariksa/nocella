@@ -55,15 +55,20 @@ yang gagal.
 ## Smoke test headless
 
 `tests/smoke/run.sh [skala]` memasang hasil `scripts/pack.sh` ke GNOME Shell headless
-(`--headless --virtual-monitor`), lalu `tests/smoke/driver.js` memeriksa lewat
-`org.gnome.Shell.Eval`:
+(`--headless --virtual-monitor`), lalu `tests/smoke/driver.js` menjalankan pemeriksaan per
+fase lewat `org.gnome.Shell.Eval`. Pemeriksaan dibagi per gate (`phase1.js`, `phase2.js`,
+dan seterusnya) dengan helper bersama di `lib.js`. `NOCELLA_SMOKE_PHASES=2` hanya
+menjalankan fase tertentu. Input memakai pointer dan keyboard virtual Clutter, jadi jalur
+event asli ikut teruji.
+
+Fase 1:
 
 - Notch aktif, di tengah, menempel di tepi atas, setinggi panel, dan jam GNOME
   tersembunyi.
-- Panel terbuka 420x240 tetap di tengah, jam tetap di header setinggi panel, lalu kembali
-  ke notch.
-- Klik kiri asli lewat pointer virtual membuka dan menutup panel, klik kanan tidak
-  berpengaruh, dan overview saat panel terbuka menyembunyikan notch lalu
+- Panel terbuka selebar 420 dan minimal 220 tinggi tetap di tengah, jam tetap di header
+  setinggi panel, lalu kembali ke notch.
+- Klik kiri asli lewat pointer virtual membuka panel, klik di luar menutupnya, klik kanan
+  tidak berpengaruh, dan overview saat panel terbuka menyembunyikan notch lalu
   mengembalikannya dalam keadaan tertutup.
 - 20 kali buka/tutup cepat lewat pemanggilan langsung, overview menyembunyikan notch, dan 20 siklus
   disable/enable tanpa kebocoran aktor.
@@ -81,7 +86,10 @@ yang gagal.
   pembungkus terpasang dan `gi://GLib` yang diimpor ekstensi adalah objek yang sama.
   Setiap pemanggilan yang pemanggil langsungnya berkas Nocella dicatat, lalu setelah
   disable dicek dengan `GObject.signal_handler_is_connected`, `find_source_by_id` atau
-  `is_destroyed()`, dan `GBinding.dup_source()`. Timer menit `GnomeDesktop.WallClock`
+  `is_destroyed()`, dan `GBinding.dup_source()`. Langganan sinyal D-Bus
+  (`signal_subscribe`, dipakai provider media) dicek terhadap `signal_unsubscribe`.
+  Handler pada aktor yang sudah di-destroy tidak dihitung bocor, karena aktor itu tidak
+  bisa memancarkan sinyal lagi. Timer menit `GnomeDesktop.WallClock`
   ada di C, jadi dicek lewat detaknya: dengan `clock-show-seconds` aktif jam harus
   berdetak sebelum disable dan diam setelahnya.
   - Kontrol negatif: menghapus `this._signals.clear()` dan `run_dispose()` membuat
@@ -93,6 +101,32 @@ yang gagal.
     tertangkap. Timer lewat `GLib.Source` langsung atau `imports.mainloop`, dan signal
     lewat `connectObject`, tidak tercatat. Fase berikutnya yang memakainya perlu
     menambah instrumentasinya.
+Fase 2, dengan player MPRIS palsu (`tests/smoke/fake-mpris.js`) yang dikendalikan lewat
+antarmuka `id.antariksa.Nocella.TestPlayer`:
+
+- Player yang baru muncul tidak membuka transien (keadaan awalnya bukan berita). Lagu
+  baru membuka transien media 380x68, jam disembunyikan, dan hanya satu halaman tampil.
+- Tiga lagu dalam 300 ms menghasilkan satu kartu dengan lagu terakhir. TTL 4 detik untuk
+  lagu dan 2 detik untuk play/pause.
+- Tombol play/pause di transien benar-benar memanggil `PlayPause` dan tidak membuka panel.
+- Lagu 2 jam di posisi 1:05:00 tampil `1:05:0x` / `2:00:00` di tab media. Timer progress 1
+  detik hanya ada saat tab media terlihat; saat tertutup tidak ada timer Nocella sama sekali
+  meskipun lagu diputar.
+- Escape, klik di luar, tombol tutup, dan hotkey `<Super>i` menutup panel dan melepas grab
+  modal. Hotkey membuka view terakhir, dan tab berpindah dengan indikator tepat di bawah
+  segmen terpilih.
+- Lewat sebentar di atas notch tidak memicu peek. Diam 140 ms membuka peek 300x64 berisi
+  baris media, lalu peek menutup setelah kursor pergi.
+- Titik status dan tombol tutup berada di tepi kanan, bukan di tengah (lihat jebakan
+  `BinLayout` di `06-implementasi-gnome.md`).
+- `debugEmit()` memicu transien tanpa media asli.
+- 50 pergantian lagu dengan jeda 200 ms: RSS shell (setelah GC) naik kurang dari 8 MiB,
+  satu player, dan lagu terakhir benar.
+- Player hilang saat diputar ditahan sekitar 2 detik, lalu media kosong, ekstensi tetap
+  aktif, dan tab media menampilkan keadaan kosong.
+
+Untuk semua fase:
+
 - Log shell bersih dari error Nocella, termasuk `JS ERROR` yang jejak tumpukannya
   mengarah ke berkas Nocella, dan tidak ada proses yang tertinggal.
 

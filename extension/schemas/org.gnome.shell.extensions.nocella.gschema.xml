@@ -10,9 +10,34 @@
       <default><![CDATA[['<Super>i']]]></default>
       <summary>Shortcut to toggle the notch panel</summary>
     </key>
+    <key name="hotkey-fallback" type="as">
+      <default><![CDATA[['<Super>F9']]]></default>
+      <summary>Shortcut used when the default shortcut is already taken</summary>
+    </key>
     <key name="intercept-banners" type="b">
       <default>true</default>
       <summary>Show notifications in the notch instead of GNOME banners</summary>
+    </key>
+    <key name="auto-expand-media" type="b">
+      <default>true</default>
+      <summary>Show media in the notch when the track changes</summary>
+    </key>
+    <key name="auto-expand-notifications" type="b">
+      <default>true</default>
+      <summary>Show notifications in the notch</summary>
+    </key>
+    <key name="auto-expand-volume" type="b">
+      <default>true</default>
+      <summary>Show the volume slider when the volume keys are used</summary>
+    </key>
+    <key name="auto-expand-agent" type="b">
+      <default>true</default>
+      <summary>Show AI agent status changes in the notch</summary>
+    </key>
+    <key name="idle-collapse-minutes" type="i">
+      <range min="0" max="60"/>
+      <default>3</default>
+      <summary>Close the open panel after this many idle minutes (0 = never)</summary>
     </key>
   </schema>
 </schemalist>

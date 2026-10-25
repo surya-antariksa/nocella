@@ -33,3 +33,333 @@
     font-weight: 600;
     font-feature-settings: "tnum";
 }
+
+/* Level 1: peek and transients. Same recipe as level 2, darker and almost opaque:
+ * rgba(18, 18, 20, 0.96) with 4% white composited on top. Stays dark in both themes. */
+.nocella.peek {
+    background-gradient-direction: vertical;
+    background-gradient-start: rgba(28, 28, 30, 0.96);
+    background-gradient-end: rgba(18, 18, 20, 0.96);
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    padding: 0 12px;
+}
+
+.nocella.peek.kind-notification {
+    border-radius: 0 0 22px 22px;
+}
+
+.nocella-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    background-color: #6E6E73;
+}
+
+.nocella-dot.accent { background-color: #0A84FF; }
+.nocella-dot.success { background-color: #30D158; }
+.nocella-dot.warning { background-color: #FF9F0A; }
+.nocella-dot.danger { background-color: #FF453A; }
+
+/* Text roles from docs/03-desain-visual.md; 1 px = 0.75 pt. */
+.nocella-title {
+    font-size: 9.75pt;
+    font-weight: 600;
+    letter-spacing: -0.1px;
+}
+
+.nocella-text {
+    font-size: 9pt;
+}
+
+.nocella-secondary {
+    font-size: 8.25pt;
+    color: #A1A1A6;
+}
+
+.nocella-caption {
+    font-size: 7.5pt;
+    font-weight: 500;
+    color: #6E6E73;
+    font-feature-settings: "tnum";
+}
+
+.nocella-metric {
+    font-size: 13.5pt;
+    font-weight: 600;
+    font-feature-settings: "tnum";
+}
+
+.nocella-big-clock {
+    font-size: 27pt;
+    font-weight: 600;
+    font-feature-settings: "tnum";
+}
+
+.nocella-peek-line {
+    font-size: 8.25pt;
+    color: #A1A1A6;
+    padding-bottom: 6px;
+}
+
+.nocella-page {
+    padding: 4px 16px 16px;
+    spacing: 8px;
+}
+
+.nocella-transient {
+    padding: 10px 0;
+    spacing: 12px;
+}
+
+.nocella-row {
+    spacing: 12px;
+}
+
+.nocella-stack {
+    spacing: 2px;
+}
+
+.nocella-card {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 12px;
+    spacing: 12px;
+}
+
+.nocella-card.clickable:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.nocella-artwork {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #A1A1A6;
+}
+
+.nocella-artwork.large {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+}
+
+.nocella-icon-button {
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
+    background-color: transparent;
+    color: #F5F5F7;
+    transition-duration: 140ms;
+}
+
+.nocella-icon-button:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.nocella-icon-button:active {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* St has no outline; an inset ring is the closest equivalent of a 2 px focus ring. */
+.nocella-icon-button:focus,
+.nocella-segment:focus,
+.nocella-pill:focus,
+.nocella-card.clickable:focus,
+.nocella-tile:focus {
+    box-shadow: inset 0 0 0 2px #0A84FF;
+}
+
+.nocella-icon-button:insensitive {
+    color: #6E6E73;
+}
+
+.nocella-segmented {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 2px;
+}
+
+.nocella-segment-row {
+    spacing: 2px;
+}
+
+.nocella-segment {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    color: #A1A1A6;
+}
+
+.nocella-segment:checked {
+    color: #F5F5F7;
+}
+
+.nocella-segment-indicator {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.14);
+}
+
+.nocella-tab-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 2px;
+    background-color: #0A84FF;
+    margin: 3px;
+}
+
+.nocella-tabbar {
+    padding: 0 16px 8px;
+}
+
+.nocella-pill {
+    height: 28px;
+    border-radius: 14px;
+    padding: 0 12px;
+    font-size: 8.25pt;
+    font-weight: 500;
+    color: #F5F5F7;
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.nocella-pill:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.nocella-pill.primary {
+    background-color: #0A84FF;
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+.nocella-calendar-day {
+    width: 24px;
+    height: 24px;
+    border-radius: 12px;
+    font-size: 7.5pt;
+    font-feature-settings: "tnum";
+    text-align: center;
+}
+
+.nocella-calendar-day.weekday {
+    color: #6E6E73;
+    font-weight: 500;
+}
+
+.nocella-calendar-day.other-month {
+    color: #6E6E73;
+}
+
+.nocella-calendar-day.today {
+    background-color: #0A84FF;
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+.nocella-page-list {
+    spacing: 8px;
+}
+
+/* "Show all" scrolls inside the panel instead of growing it past the screen. */
+.nocella-scroll {
+    max-height: 240px;
+}
+
+/* System metrics (docs/03-desain-visual.md, "Metrik sistem"). */
+.nocella-metrics {
+    spacing: 4px;
+}
+
+.nocella-metric-row {
+    spacing: 12px;
+    min-height: 28px;
+}
+
+.nocella-metric-label {
+    width: 64px;
+}
+
+.nocella-metric-value {
+    font-size: 9.75pt;
+    font-weight: 600;
+    font-feature-settings: "tnum";
+}
+
+.nocella-sparkline {
+    width: 80px;
+    height: 20px;
+}
+
+.nocella-workspace-grid {
+    spacing: 8px;
+    padding-top: 8px;
+}
+
+.nocella-workspace {
+    width: 40px;
+    height: 32px;
+    border-radius: 10px;
+    font-size: 9pt;
+    font-weight: 600;
+    font-feature-settings: "tnum";
+    color: #F5F5F7;
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.nocella-workspace:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.nocella-workspace.empty {
+    color: #A1A1A6;
+}
+
+.nocella-workspace.active {
+    background-color: #0A84FF;
+    color: #FFFFFF;
+}
+
+.nocella-workspace:focus {
+    box-shadow: inset 0 0 0 2px #0A84FF;
+}
+
+.nocella.expanded.light .nocella-workspace { color: #1D1D1F; background-color: rgba(0, 0, 0, 0.06); }
+.nocella.expanded.light .nocella-workspace.empty { color: #6E6E73; }
+.nocella.expanded.light .nocella-workspace.active { color: #FFFFFF; background-color: #0A84FF; }
+
+.nocella-empty {
+    font-size: 9pt;
+    color: #6E6E73;
+    text-align: center;
+}
+
+/* Light theme: only the pinned panel follows it; the collapsed notch, peek, and
+ * transients stay dark like the bezel. */
+.nocella.expanded.light {
+    background-gradient-start: rgba(251, 251, 253, 0.85);
+    background-gradient-end: rgba(250, 250, 252, 0.84);
+    color: #1D1D1F;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
+}
+
+.nocella.expanded.light .nocella-secondary { color: #6E6E73; }
+.nocella.expanded.light .nocella-caption,
+.nocella.expanded.light .nocella-empty,
+.nocella.expanded.light .nocella-calendar-day.weekday,
+.nocella.expanded.light .nocella-calendar-day.other-month { color: #8E8E93; }
+.nocella.expanded.light .nocella-card { background-color: rgba(0, 0, 0, 0.04); }
+.nocella.expanded.light .nocella-card.clickable:hover { background-color: rgba(0, 0, 0, 0.07); }
+.nocella.expanded.light .nocella-artwork { background-color: rgba(0, 0, 0, 0.06); color: #6E6E73; }
+.nocella.expanded.light .nocella-icon-button { color: #1D1D1F; }
+.nocella.expanded.light .nocella-icon-button:hover { background-color: rgba(0, 0, 0, 0.07); }
+.nocella.expanded.light .nocella-icon-button:active { background-color: rgba(0, 0, 0, 0.10); }
+.nocella.expanded.light .nocella-segmented { background-color: rgba(0, 0, 0, 0.05); }
+.nocella.expanded.light .nocella-segment { color: #6E6E73; }
+.nocella.expanded.light .nocella-segment:checked { color: #1D1D1F; }
+.nocella.expanded.light .nocella-segment-indicator { background-color: rgba(255, 255, 255, 0.95); }
+.nocella.expanded.light .nocella-pill { color: #1D1D1F; background-color: rgba(0, 0, 0, 0.06); }
+.nocella.expanded.light .nocella-pill:hover { background-color: rgba(0, 0, 0, 0.10); }
+.nocella.expanded.light .nocella-pill.primary { color: #FFFFFF; background-color: #0A84FF; }

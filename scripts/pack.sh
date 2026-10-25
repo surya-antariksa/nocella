@@ -13,20 +13,29 @@ args=(
     --schema=schemas/org.gnome.shell.extensions.nocella.gschema.xml
 )
 
-source="$root/extension"
+# Pack from a staging copy. getSettings() reads schemas/gschemas.compiled, and neither
+# `gnome-extensions pack` nor `install` compiles it, so it is added to the zip below.
+stage="$(mktemp -d "${TMPDIR:-/tmp}/nocella-pack.XXXXXX")"
+trap 'rm -rf "$stage"' EXIT
+cp -r "$root/extension/." "$stage/"
+glib-compile-schemas --strict "$stage/schemas"
 
 # gnome-extensions compiles po/ with msgfmt from the gettext package, and uses po/
-# whenever it exists. Without msgfmt, pack a copy that has no po/ instead.
+# whenever it exists. Without msgfmt, pack without po/ instead.
 if command -v msgfmt >/dev/null; then
     args+=(--podir=po)
 else
     echo "warning: msgfmt not found, packing without translations (apt install gettext)" >&2
-    stage="$(mktemp -d "${TMPDIR:-/tmp}/nocella-pack.XXXXXX")"
-    trap 'rm -rf "$stage"' EXIT
-    cp -r "$root/extension/." "$stage/"
     rm -rf "$stage/po"
-    source="$stage"
 fi
 
-gnome-extensions pack "${args[@]}" "$source"
-echo "$out/nocella@antariksa.shell-extension.zip"
+gnome-extensions pack "${args[@]}" "$stage"
+zip_path="$out/nocella@antariksa.shell-extension.zip"
+python3 -I - "$zip_path" "$stage/schemas/gschemas.compiled" <<'PY'
+import sys
+import zipfile
+
+with zipfile.ZipFile(sys.argv[1], 'a', zipfile.ZIP_DEFLATED) as bundle:
+    bundle.write(sys.argv[2], 'schemas/gschemas.compiled')
+PY
+echo "$zip_path"

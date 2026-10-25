@@ -103,7 +103,8 @@ Risiko utama: `Main.panel.height` belum tersedia saat enable. Fallback ke 32.
 
 ## Fase 2: State machine, arbiter, media
 
-**Hari 6-10.**
+**Hari 6-10. Status: selesai.** G2 lulus 2026-10-25 lewat unit test dan smoke test skala 1
+dan 2 dengan player MPRIS palsu (`tests/smoke/fake-mpris.js`).
 
 Pekerjaan:
 
@@ -118,12 +119,16 @@ Keluaran: lagu berganti memunculkan kartu media, klik membuka panel media.
 
 Gate G2:
 
-- [ ] Ganti lagu 50 kali, memori stabil.
-- [ ] Hanya satu kartu meskipun event beruntun.
-- [ ] Progress benar untuk lagu > 1 jam.
-- [ ] Player hilang tidak membuat error.
-- [ ] Collapsed tidak punya timer progress.
-- [ ] Semua unit test arbiter lulus.
+- [x] Ganti lagu 50 kali, memori stabil (RSS shell naik 0,3 MiB di skala 1 dan kurang dari
+      0,1 MiB di skala 2, satu proxy, kartu terakhir benar).
+- [x] Hanya satu kartu meskipun event beruntun (tiga lagu dalam 300 ms: satu halaman,
+      antrean kosong, judul terakhir).
+- [x] Progress benar untuk lagu > 1 jam (lagu 2 jam di 1:05:00: waktu `1:05:0x`, durasi
+      `2:00:00`, fraksi 0,54).
+- [x] Player hilang tidak membuat error (ditahan sekitar 2 detik, lalu kosong, log bersih).
+- [x] Collapsed tidak punya timer progress (saat lagu diputar dan notch tertutup, tidak
+      ada timer Nocella yang aktif; saat tab media terbuka ada tepat satu timer 1 detik).
+- [x] Semua unit test arbiter lulus (12 tes arbiter, 22 tes state machine).
 
 ## Fase 3: Notifikasi
 

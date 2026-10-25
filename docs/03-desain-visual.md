@@ -78,8 +78,8 @@ Saat terbuka, bentuknya tumbuh ke bawah seperti sheet macOS:
 
 ```
         ████████████████████████████████████████████
-        █  14:32    [ ◷ ][ ♪ ][ ▤ ][ ● ][ ▦ ]      ⌄  █
-        █──────────────────────────────────────────█
+        █                   14:32                 ⌃  █
+        █         [ ◷ ][ ♪ ][ ▤ ][ ● ][ ▦ ]          █
         █  ┌────────────────────────────────────┐  █
         █  │  ████   Judul Lagu                 │  █
         █  │  ████   Artis · Album              │  █
@@ -90,7 +90,10 @@ Saat terbuka, bentuknya tumbuh ke bawah seperti sheet macOS:
 ```
 
 Tidak ada jarak antara notch dan tepi atas. Panel terbuka terlihat seperti kelanjutan
-dari notch, bukan kartu terpisah.
+dari notch, bukan kartu terpisah. Jam tetap di tengah header setinggi notch, persis di
+tempatnya saat tertutup, sehingga tidak bergeser saat panel membuka. Segmented control
+ada di baris tepat di bawah header, dan tombol tutup ada di tepi kanan header (diputuskan
+di fase 2).
 
 ## Material dan kedalaman
 

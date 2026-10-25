@@ -33,8 +33,9 @@ Setiap fitur punya sumber data, tampilan, aksi, cara gagal, dan perkiraan usaha.
 
 ### Gagal
 
-Kalau `gnome-calendar` tidak ada, tombol tetap ada tapi menampilkan notifikasi kecil
-"GNOME Calendar tidak terpasang". Jangan crash.
+Kalau GNOME Calendar tidak terpasang, tanggal tampil sebagai teks biasa yang tidak bisa
+diklik, sesuai `04-interaksi.md`. Jangan crash. (Diputuskan di fase 2; notifikasi
+"tidak terpasang" ditolak karena ikut lewat notch sebagai gangguan.)
 
 ### Usaha: 2 hari
 

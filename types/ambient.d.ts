@@ -7,6 +7,7 @@
 // Shorthand declarations: every import from these modules is `any`.
 declare module 'gi://*';
 declare module 'resource:///*';
+declare module 'cairo';
 
 declare module 'system' {
     const System: {exit(status: number): never};

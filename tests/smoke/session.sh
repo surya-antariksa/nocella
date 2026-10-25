@@ -18,6 +18,8 @@ fi
 gsettings set org.gnome.shell welcome-dialog-last-shown-version '999'
 # Keeps the overview from waking Nautilus, Tracker, and other search providers.
 gsettings set org.gnome.desktop.search-providers disable-external true
+# The developer's real session is dark; the light theme gets its own checks (phase 7).
+gsettings set org.gnome.desktop.interface color-scheme prefer-dark
 size=1920x1080
 if [ "$scale" = 2 ]; then
     gsettings set org.gnome.desktop.interface scaling-factor 2

@@ -11,11 +11,32 @@ export const Size = Object.freeze({
     PANEL_HEIGHT_FALLBACK: 32,
     PINNED_WIDTH: 420,
     PINNED_HEIGHT: 240,
+    PINNED_MIN_HEIGHT: 220,
+    PEEK_WIDTH: 300,
+    PEEK_HEIGHT: 64,
+    // Room for the one-line summary under the clock when the panel is taller than 40 px.
+    PEEK_LINE_HEIGHT: 24,
+    // The panel may not touch the monitor edges (docs/04-interaksi.md, "Monitor").
+    MONITOR_MARGIN: 16,
+});
+
+/** Transient sizes per content kind, from docs/03-desain-visual.md. */
+export const TransientSize = Object.freeze({
+    media: Object.freeze({width: 380, height: 68}),
+    notification: Object.freeze({width: 420, height: 92}),
+    volume: Object.freeze({width: 320, height: 60}),
+    workspace: Object.freeze({width: 300, height: 56}),
+    agent: Object.freeze({width: 380, height: 68}),
+    toggle: Object.freeze({width: 260, height: 48}),
 });
 
 export const Duration = Object.freeze({
     OPEN_MS: 300,
     CLOSE_MS: 220,
+    CONTENT_FADE_MS: 160,
+    CONTENT_DELAY_MS: 40,
+    SEGMENT_MS: 180,
+    PRESS_MS: 90,
 });
 
 // Colors are mirrored in stylesheet.css (St has no CSS variables). The JS copy is the

@@ -25,9 +25,11 @@ kali mouse lewat di tengah atas layar.
 | Layar terkunci | GNOME menonaktifkan ekstensi (`disable()`) | langsung | tidak ada, ekstensi mati sampai unlock |
 | Overview terbuka | Sembunyikan | langsung | SUPPRESSED |
 
-Hotkey default bisa diubah di preferensi. Sebelum dipakai, cek konflik dengan
-`gsettings list-recursively org.gnome.shell.keybindings`. Kalau `<Super>i` sudah dipakai
-(atau dipakai ekstensi lain), jatuh ke `<Super>F9`.
+Hotkey default bisa diubah di preferensi. Sebelum dipakai, `enable()` mencari konflik di
+schema pintasan GNOME (shell, mutter, wm, media-keys). Kalau `<Super>i` sudah dipakai dan
+pengguna belum memilih pintasan sendiri, yang didaftarkan adalah kunci `hotkey-fallback`
+(`<Super>F9`). Pengaturan pengguna tidak ditulis, jadi `<Super>i` kembali sendiri kalau
+bentroknya hilang.
 
 ## Rasa macOS
 
@@ -71,7 +73,7 @@ Aturan:
 1. Prioritas lebih tinggi selalu menang, kecuali state sedang PINNED.
 2. Prioritas sama: event terbaru menggantikan yang lama, timer di-reset.
 3. Prioritas lebih rendah saat TRANSIENT: masuk antrean, maksimal 5 item. Item dengan
-   prioritas terendah dibuang lebih dulu.
+   prioritas terendah dibuang lebih dulu; di antara prioritas yang sama, yang paling lama.
 4. Antrean dikosongkan saat state menjadi PINNED atau COLLAPSED.
 5. Event dengan `coalesceKey` yang sama dengan konten aktif atau item antrean tidak
    membuat tampilan baru: payload diganti nilai terbaru dan TTL di-reset. Arbiter tidak

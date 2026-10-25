@@ -7,7 +7,7 @@ import {Nocella} from './src/nocella.js';
 
 export default class NocellaExtension extends Extension {
     enable() {
-        this._nocella = new Nocella();
+        this._nocella = new Nocella(this.getSettings());
         try {
             this._nocella.enable();
         } catch (e) {

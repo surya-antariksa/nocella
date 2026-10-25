@@ -138,10 +138,10 @@ mudah dikembalikan.
 
 State machine adalah satu-satunya pemilik visibilitas. `trackFullscreen` tidak dipakai,
 karena ia menyembunyikan aktor tanpa memberi tahu state machine, sehingga
-`bannerBlocked` bisa tertinggal `true` saat fullscreen. Di fase 1, `Nocella`
-(`src/nocella.js`) yang memegang himpunan alasan ini; state machine mengambil alih di
-fase 2. `monitors-changed` juga menyinkronkan ulang status fullscreen, karena monitor
-utama baru belum tentu memicu `in-fullscreen-changed`.
+`bannerBlocked` bisa tertinggal `true` saat fullscreen. Sejak fase 2, himpunan alasan ini
+dipegang `StateMachine` (`src/state.js`), dengan alasan `fullscreen`, `overview`, dan
+`disabled` (kunci `notch-enabled`). `monitors-changed` juga menyinkronkan ulang status
+fullscreen, karena monitor utama baru belum tentu memicu `in-fullscreen-changed`.
 
 ```js
 this._signals.add(global.display, global.display.connect('in-fullscreen-changed', () => {
@@ -167,6 +167,22 @@ GNOME memanggil `disable()` saat mengunci dan `enable()` setelah unlock.
 
 Di GNOME 46, overview tetap menampilkan chrome actor kalau tidak disembunyikan manual,
 jadi sinyal overview wajib.
+
+## Panel terbuka: grab, klik di luar, keyboard
+
+Saat PINNED, `Nocella` memanggil `Main.pushModal(actor, {actionMode: Shell.ActionMode.POPUP})`
+seperti menu GNOME. Semua tekanan pointer sampai ke aktor notch, jadi handler
+`captured-event` bisa menutup panel kalau koordinatnya di luar aktor (seperti popover
+macOS). Escape menutup, Tab dan Shift+Tab memakai `navigate_focus()` di dalam panel, dan
+fokus awal ada di segmen tab terpilih. Grab dilepas setiap kali state keluar dari PINNED,
+dan juga di `disable()` sebelum aktor dihancurkan.
+
+Hotkey didaftarkan dengan `Main.wm.addKeybinding('hotkey', settings, ...)` untuk
+`Shell.ActionMode.NORMAL | POPUP`, jadi bisa menutup panel yang sedang memegang grab.
+Kalau `<Super>i` sudah dipakai di schema pintasan GNOME dan pengguna belum memilih
+pintasan sendiri, kunci `hotkey-fallback` (`<Super>F9`) yang didaftarkan, tanpa menulis
+pengaturan pengguna, dan dicatat di log (`src/hotkey.js`). Setelah resume dari suspend
+(`PrepareForSleep` milik logind), notch kembali COLLAPSED dan provider disambung ulang.
 
 ## Sinyal dan pembersihan
 
@@ -503,6 +519,9 @@ pack` selalu mencoba mengompilasi `po/` bila folder itu ada.
 | Stop gradient putih transparan | Panel keruh terang, `background-color` hilang | Stop membawa warna permukaan |
 | `box-shadow` campur luar dan `inset` | Tidak ada bayangan sama sekali | Satu bayangan per aktor |
 | `clip_to_allocation` di aktor akar | Bayangan luar terpotong | Jangan dipasang |
+| `x_align` anak `Clutter.BinLayout` tanpa `x_expand` | Anak tetap di tengah (titik status dan tombol tutup bertumpuk di bawah jam) | Pasang `x_expand: true` kalau induknya memang melebar, atau hitung offset dari alokasi |
+| `has_allocation()` sesudah mengubah style (`checked`) | Bernilai `false` sampai relayout, dan `notify::allocation` tidak datang kalau kotaknya sama | Pakai `get_allocation_box()` terakhir, lewati hanya aktor yang belum pernah dialokasikan |
+| `gschemas.compiled` tidak ada di zip | `getSettings()` gagal, ekstensi tidak bisa enable | `scripts/pack.sh` mengompilasi schema dan menambahkannya ke zip; `gnome-extensions pack` maupun `install` tidak melakukannya |
 | Shell uji di session bus privat | Shell menyalakan `ibus-daemon` sendiri yang tertinggal dan membengkak | Stub `ibus-daemon`, scope dengan `MemoryMax` |
 | `addChrome` dengan `affectsStruts: true` | Panel bawah ikut bergeser | Jangan pakai struts |
 | Animasi `width`/`height` sambil ganti teks | Teks melompat, layout berkedip | Fade konten dulu |
